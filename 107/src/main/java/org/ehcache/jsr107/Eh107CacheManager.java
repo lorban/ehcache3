@@ -37,6 +37,7 @@ import javax.management.MBeanServer;
 
 import org.ehcache.Ehcache;
 import org.ehcache.EhcacheHackAccessor;
+import org.ehcache.EhcacheManager;
 import org.ehcache.config.CacheConfiguration;
 import org.ehcache.config.CacheConfigurationBuilder;
 import org.ehcache.config.loaderwriter.DefaultCacheLoaderWriterConfiguration;
@@ -59,7 +60,7 @@ class Eh107CacheManager implements CacheManager {
   private final Object cachesLock = new Object();
   private final ConcurrentMap<String, Eh107Cache<?, ?>> caches = new ConcurrentHashMap<String, Eh107Cache<?, ?>>();
   private final AtomicBoolean closed = new AtomicBoolean();
-  private final org.ehcache.CacheManager ehCacheManager;
+  private final EhcacheManager ehCacheManager;
   private final EhcacheCachingProvider cachingProvider;
   private final ClassLoader classLoader;
   private final URI uri;
@@ -68,7 +69,7 @@ class Eh107CacheManager implements CacheManager {
   private final Jsr107Service jsr107Service;
   private final org.ehcache.config.Configuration ehConfig;
 
-  Eh107CacheManager(EhcacheCachingProvider cachingProvider, org.ehcache.CacheManager ehCacheManager, Properties props,
+  Eh107CacheManager(EhcacheCachingProvider cachingProvider, EhcacheManager ehCacheManager, Properties props,
       ClassLoader classLoader, URI uri, Eh107CacheLoaderWriterFactory cacheLoaderWriterFactory,
       org.ehcache.config.Configuration ehConfig, Jsr107Service jsr107Service) {
     this.cachingProvider = cachingProvider;
@@ -81,6 +82,10 @@ class Eh107CacheManager implements CacheManager {
     this.jsr107Service = jsr107Service;
 
     loadExistingEhcaches();
+  }
+
+  EhcacheManager getEhCacheManager() {
+    return ehCacheManager;
   }
 
   private void loadExistingEhcaches() {
@@ -392,7 +397,11 @@ class Eh107CacheManager implements CacheManager {
     synchronized (cachesLock) {
       checkClosed();
 
-      //TODO: register MXBeans here
+      if (enabled) {
+        registerObject(cache.getManagementMBean());
+      } else {
+        unregisterObject(cache.getManagementMBean());
+      }
 
       cache.setManagementEnabled(enabled);
     }
@@ -438,7 +447,11 @@ class Eh107CacheManager implements CacheManager {
     synchronized (cachesLock) {
       checkClosed();
 
-      // TODO: register MXBeans here
+      if (enabled) {
+        registerObject(cache.getStatisticsMBean());
+      } else {
+        unregisterObject(cache.getStatisticsMBean());
+      }
 
       cache.setStatisticsEnabled(enabled);
     }
@@ -495,7 +508,17 @@ class Eh107CacheManager implements CacheManager {
   void close(Eh107Cache<?, ?> cache, MultiCacheException closeException) {
     try {
       if (caches.remove(cache.getName(), cache)) {
-        //TODO: unregister MXBeans here
+        try {
+          unregisterObject(cache.getManagementMBean());
+        } catch (Throwable t) {
+          closeException.addThrowable(t);
+        }
+
+        try {
+          unregisterObject(cache.getStatisticsMBean());
+        } catch (Throwable t) {
+          closeException.addThrowable(t);
+        }
 
         try {
           cache.closeInternal(closeException);

@@ -55,6 +55,7 @@ class Eh107Cache<K, V> implements Cache<K, V> {
   private final AtomicBoolean closed = new AtomicBoolean();
   private final CacheResources<K, V> cacheResources;
   private final Eh107CacheMXBean managementBean;
+  private final Eh107CacheStatisticsMXBean statisticsBean;
   private final Eh107Configuration<K, V> config;
   private final CacheLoaderWriter<? super K, V> cacheLoaderWriter;
   private final Eh107Expiry<K, V> expiry;
@@ -69,6 +70,7 @@ class Eh107Cache<K, V> implements Cache<K, V> {
     this.name = name;
     this.cacheResources = cacheResources;
     this.managementBean = new Eh107CacheMXBean(name, cacheManager, config);
+    this.statisticsBean = new Eh107CacheStatisticsMXBean(name, cacheManager);
 
     for (Map.Entry<CacheEntryListenerConfiguration<K, V>, ListenerResources<K, V>> entry : cacheResources
         .getListenerResources().entrySet()) {
@@ -526,6 +528,14 @@ class Eh107Cache<K, V> implements Cache<K, V> {
   @Override
   public String toString() {
     return getClass().getSimpleName() + "[" + name + "]";
+  }
+
+  Eh107MXBean getManagementMBean() {
+    return managementBean;
+  }
+
+  Eh107MXBean getStatisticsMBean() {
+    return statisticsBean;
   }
 
   void setStatisticsEnabled(boolean enabled) {

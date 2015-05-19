@@ -47,6 +47,7 @@ import org.ehcache.statistics.CacheOperationOutcomes.PutOutcome;
 import org.ehcache.statistics.CacheOperationOutcomes.RemoveOutcome;
 import org.ehcache.statistics.CacheOperationOutcomes.ReplaceOutcome;
 import org.slf4j.Logger;
+import org.terracotta.context.annotations.ContextAttribute;
 import org.terracotta.statistics.StatisticsManager;
 import org.terracotta.statistics.observer.OperationObserver;
 
@@ -81,11 +82,13 @@ import static org.terracotta.statistics.StatisticBuilder.operation;
 /**
  * @author Alex Snaps
  */
+@ContextAttribute("this")
 public class Ehcache<K, V> implements Cache<K, V>, UserManagedCache<K, V>, PersistentUserManagedCache<K, V> {
 
   private final StatusTransitioner statusTransitioner;
 
   private final Store<K, V> store;
+  private final String alias;
   private final CacheLoaderWriter<? super K, V> cacheLoaderWriter;
   private final ResilienceStrategy<K, V> resilienceStrategy;
   private final RuntimeConfiguration<K, V> runtimeConfiguration;
@@ -122,13 +125,14 @@ public class Ehcache<K, V> implements Cache<K, V>, UserManagedCache<K, V>, Persi
       final CacheLoaderWriter<? super K, V> cacheLoaderWriter, 
       CacheEventNotificationService<K, V> eventNotifier,
       Logger logger) {
-    this(runtimeConfiguration, store, cacheLoaderWriter, eventNotifier, true, logger);
+    this(runtimeConfiguration, store, cacheLoaderWriter, eventNotifier, true, null, logger);
   }
 
   Ehcache(RuntimeConfiguration<K, V> runtimeConfiguration, Store<K, V> store,
           CacheLoaderWriter<? super K, V> cacheLoaderWriter,
-          CacheEventNotificationService<K, V> eventNotifier, boolean useLoaderInAtomics, Logger logger) {
+          CacheEventNotificationService<K, V> eventNotifier, boolean useLoaderInAtomics, String alias, Logger logger) {
     this.store = store;
+    this.alias = alias;
     StatisticsManager.associate(store).withParent(this);
     this.cacheLoaderWriter = cacheLoaderWriter;
     if (store instanceof RecoveryCache) {
@@ -146,8 +150,13 @@ public class Ehcache<K, V> implements Cache<K, V>, UserManagedCache<K, V>, Persi
     this.jsr107Cache = new Jsr107CacheImpl();
 
     this.useLoaderInAtomics = useLoaderInAtomics;
-    this.logger=logger;
+    this.logger = logger;
     this.statusTransitioner = new StatusTransitioner(logger);
+  }
+
+  @ContextAttribute("name")
+  public String getAlias() {
+    return alias;
   }
 
   @SuppressWarnings("unchecked")
@@ -599,7 +608,7 @@ public class Ehcache<K, V> implements Cache<K, V>, UserManagedCache<K, V>, Persi
   @SuppressWarnings({ "unchecked" })
   private void collectSuccessesAndFailures(BulkCacheLoadingException bcle, Map<K, V> successes, Map<K, Exception> failures) {
     successes.putAll((Map<K, V>) bcle.getSuccesses());
-    failures.putAll((Map<K, Exception>)bcle.getFailures());
+    failures.putAll((Map<K, Exception>) bcle.getFailures());
   }
   
 

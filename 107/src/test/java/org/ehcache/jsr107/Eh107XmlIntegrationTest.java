@@ -50,11 +50,13 @@ public class Eh107XmlIntegrationTest {
     CachingProvider cachingProvider = Caching.getCachingProvider();
     cacheManager = cachingProvider.getCacheManager(getClass().getResource("/ehcache-107-integration.xml")
         .toURI(), cachingProvider.getDefaultClassLoader());
+    cacheManager.enableManagement("productCache", true);
+    cacheManager.enableStatistics("productCache", true);
   }
 
   @SuppressWarnings("serial")
   @Test
-  public void test107BasedOnEhcacheTemplate() {
+  public void test107BasedOnEhcacheTemplate() throws InterruptedException {
     final DumbCacheLoader product2CacheLoader = new DumbCacheLoader();
 
     MutableConfiguration<Long, Product> product2Configuration = new MutableConfiguration<Long, Product>();
@@ -65,6 +67,8 @@ public class Eh107XmlIntegrationTest {
         return product2CacheLoader;
       }
     });
+
+    Thread.currentThread().join();
 
     Cache<Long, Product> productCache2 = cacheManager.createCache("productCache2", product2Configuration);
     Product product = productCache2.get(124L);
