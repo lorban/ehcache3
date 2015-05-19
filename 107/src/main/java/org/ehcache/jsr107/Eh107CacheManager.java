@@ -392,11 +392,7 @@ class Eh107CacheManager implements CacheManager {
     synchronized (cachesLock) {
       checkClosed();
 
-      if (enabled) {
-        registerObject(cache.getManagementMBean());
-      } else {
-        unregisterObject(cache.getManagementMBean());
-      }
+      //TODO: register MXBeans here
 
       cache.setManagementEnabled(enabled);
     }
@@ -442,11 +438,7 @@ class Eh107CacheManager implements CacheManager {
     synchronized (cachesLock) {
       checkClosed();
 
-      if (enabled) {
-        registerObject(cache.getStatisticsMBean());
-      } else {
-        unregisterObject(cache.getStatisticsMBean());
-      }
+      // TODO: register MXBeans here
 
       cache.setStatisticsEnabled(enabled);
     }
@@ -503,17 +495,7 @@ class Eh107CacheManager implements CacheManager {
   void close(Eh107Cache<?, ?> cache, MultiCacheException closeException) {
     try {
       if (caches.remove(cache.getName(), cache)) {
-        try {
-          unregisterObject(cache.getManagementMBean());
-        } catch (Throwable t) {
-          closeException.addThrowable(t);
-        }
-
-        try {
-          unregisterObject(cache.getStatisticsMBean());
-        } catch (Throwable t) {
-          closeException.addThrowable(t);
-        }
+        //TODO: unregister MXBeans here
 
         try {
           cache.closeInternal(closeException);

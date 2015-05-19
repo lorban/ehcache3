@@ -20,7 +20,7 @@ plugins {
   id 'com.github.johnrengelman.shadow' version '1.2.0'
 }
 
-def projectsToInclude = [':api', ':core', ':impl', ':jmx', ':107', ':xml']
+def projectsToInclude = [':api', ':core', ':impl', ':107', ':xml']
 
 dependencies {
   projectsToInclude.each {compile project(it)}

@@ -19,7 +19,6 @@ package org.ehcache.statistics;
 /**
  * 
  * @author Hung Huynh
- *
  */
 public interface CacheOperationOutcomes {
 
@@ -37,7 +36,7 @@ public interface CacheOperationOutcomes {
     MISS_WITH_LOADER,    
     /** failure */
     FAILURE
-  };
+  }
 
   /**
    * The outcomes for Put Outcomes.
@@ -47,7 +46,7 @@ public interface CacheOperationOutcomes {
     ADDED,
     /** failure */
     FAILURE
-  };
+  }
 
   /**
    * The outcomes for remove operations.
@@ -57,7 +56,7 @@ public interface CacheOperationOutcomes {
     SUCCESS,
     /** failure */
     FAILURE
-  };
+  }
 
   /**
    * The outcomes for conditional remove operations.
@@ -67,7 +66,7 @@ public interface CacheOperationOutcomes {
     FAILURE_KEY_PRESENT,
     FAILURE_KEY_MISSING,
     FAILURE
-  };
+  }
   
   /**
    * The eviction outcomes.
@@ -77,7 +76,7 @@ public interface CacheOperationOutcomes {
     SUCCESS,
     /** failure */
     FAILURE
-  };
+  }
   
   /**
    * The cache loading outcomes.
@@ -87,7 +86,7 @@ public interface CacheOperationOutcomes {
     SUCCESS,
     /** failure */
     FAILURE
-  };
+  }
   
   /**
    * The putIfAbsent outcomes.
@@ -96,7 +95,7 @@ public interface CacheOperationOutcomes {
     PUT,
     HIT,
     FAILURE
-  };
+  }
   
   /**
    * The replace outcomes.
@@ -106,5 +105,5 @@ public interface CacheOperationOutcomes {
     MISS_PRESENT,
     MISS_NOT_PRESENT,
     FAILURE
-  };  
+  }
 }

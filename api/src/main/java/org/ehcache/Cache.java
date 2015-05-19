@@ -20,7 +20,6 @@ import org.ehcache.exceptions.BulkCacheLoadingException;
 import org.ehcache.exceptions.BulkCacheWritingException;
 import org.ehcache.exceptions.CacheLoadingException;
 import org.ehcache.exceptions.CacheWritingException;
-import org.ehcache.statistics.CacheStatistics;
 
 import java.util.Map;
 import java.util.Set;
@@ -196,13 +195,6 @@ public interface Cache<K, V> extends Iterable<Cache.Entry<K,V>> {
    * @return the configuration currently in use
    */
   CacheRuntimeConfiguration<K, V> getRuntimeConfiguration();
-  
-  /**
-   * Returns statistics instance for this cache
-   *
-   * @return the statistics
-   */
-  CacheStatistics getStatistics();
   
   /**
    * Represent a mapping of key to value held in a Cache

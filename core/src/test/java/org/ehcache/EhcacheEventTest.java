@@ -31,6 +31,9 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
 import org.ehcache.event.CacheEvent;
+import org.ehcache.event.CacheEventListener;
+import org.ehcache.event.EventFiring;
+import org.ehcache.event.EventOrdering;
 import org.ehcache.event.EventType;
 import org.ehcache.events.CacheEventNotificationService;
 import org.ehcache.exceptions.CacheAccessException;
@@ -59,6 +62,22 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static org.ehcache.config.CacheConfigurationBuilder.newCacheConfigurationBuilder;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
+import static org.junit.Assert.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.argThat;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 @SuppressWarnings({ "unchecked", "rawtypes" })
 public class EhcacheEventTest {
   
@@ -75,7 +94,7 @@ public class EhcacheEventTest {
     RuntimeConfiguration<Number, String> runtimeConfiguration = new RuntimeConfiguration<Number, String>(newCacheConfigurationBuilder()
         .buildConfig(Number.class, String.class), eventNotifier);
     cache = new Ehcache<Number, String>(
-        runtimeConfiguration, store, loaderWriter, eventNotifier, null, LoggerFactory.getLogger(Ehcache.class + "-" + "EhcacheEventTest"));
+        runtimeConfiguration, store, loaderWriter, eventNotifier, LoggerFactory.getLogger(Ehcache.class + "-" + "EhcacheEventTest"));
     cache.init();
   }
   

@@ -16,9 +16,6 @@
 
 package org.ehcache;
 
-import java.util.HashMap;
-import java.util.concurrent.ScheduledExecutorService;
-
 import org.ehcache.config.BaseCacheConfiguration;
 import org.ehcache.config.CacheConfiguration;
 import org.ehcache.config.EvictionPrioritizer;
@@ -26,8 +23,8 @@ import org.ehcache.config.EvictionVeto;
 import org.ehcache.config.ResourcePools;
 import org.ehcache.config.ResourcePoolsBuilder;
 import org.ehcache.config.StoreConfigurationImpl;
-import org.ehcache.config.units.EntryUnit;
 import org.ehcache.config.UserManagedCacheConfiguration;
+import org.ehcache.config.units.EntryUnit;
 import org.ehcache.events.CacheEventNotificationService;
 import org.ehcache.expiry.Expirations;
 import org.ehcache.expiry.Expiry;
@@ -39,6 +36,8 @@ import org.ehcache.spi.service.Service;
 import org.ehcache.spi.service.ServiceConfiguration;
 import org.ehcache.util.ClassLoading;
 import org.slf4j.Logger;
+
+import java.util.HashMap;
 
 import static org.ehcache.config.ResourcePoolsBuilder.newResourcePoolsBuilder;
 
@@ -55,7 +54,6 @@ public class UserManagedCacheBuilder<K, V, T extends UserManagedCache<K, V>> {
   private EvictionVeto<? super K, ? super V> evictionVeto;
   private EvictionPrioritizer<? super K, ? super V> evictionPrioritizer;
   private CacheLoaderWriter<? super K, V> cacheLoaderWriter;
-  private ScheduledExecutorService statisticsExecutor;
   private CacheEventNotificationService<K, V> cacheEventNotificationService;
   private ResourcePools resourcePools = newResourcePoolsBuilder().heap(Long.MAX_VALUE, EntryUnit.ENTRIES).build();
 
@@ -82,7 +80,7 @@ public class UserManagedCacheBuilder<K, V, T extends UserManagedCache<K, V>> {
 
     RuntimeConfiguration<K, V> runtimeConfiguration = new RuntimeConfiguration<K, V>(cacheConfig, cacheEventNotificationService);
 
-    final Ehcache<K, V> ehcache = new Ehcache<K, V>(runtimeConfiguration, store, cacheLoaderWriter, cacheEventNotificationService, statisticsExecutor,logger);
+    final Ehcache<K, V> ehcache = new Ehcache<K, V>(runtimeConfiguration, store, cacheLoaderWriter, cacheEventNotificationService, logger);
     ehcache.addHook(new LifeCycled() {
       @Override
       public void init() throws Exception {
@@ -144,11 +142,6 @@ public class UserManagedCacheBuilder<K, V, T extends UserManagedCache<K, V>> {
     }
     
     this.expiry = expiry;
-    return this;
-  }
-
-  public final UserManagedCacheBuilder<K, V, T> withStatistics(ScheduledExecutorService statisticsExecutor) {
-    this.statisticsExecutor = statisticsExecutor;
     return this;
   }
 

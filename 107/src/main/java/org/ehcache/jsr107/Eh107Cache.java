@@ -15,12 +15,16 @@
  */
 package org.ehcache.jsr107;
 
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
+import org.ehcache.Ehcache;
+import org.ehcache.EhcacheHackAccessor;
+import org.ehcache.event.EventFiring;
+import org.ehcache.event.EventOrdering;
+import org.ehcache.function.BiFunction;
+import org.ehcache.function.Function;
+import org.ehcache.function.NullaryFunction;
+import org.ehcache.jsr107.CacheResources.ListenerResources;
+import org.ehcache.jsr107.EventListenerAdaptors.EventListenerAdaptor;
+import org.ehcache.spi.loaderwriter.CacheLoaderWriter;
 
 import javax.cache.Cache;
 import javax.cache.CacheManager;
@@ -32,17 +36,12 @@ import javax.cache.integration.CompletionListener;
 import javax.cache.processor.EntryProcessor;
 import javax.cache.processor.EntryProcessorException;
 import javax.cache.processor.EntryProcessorResult;
-
-import org.ehcache.Ehcache;
-import org.ehcache.EhcacheHackAccessor;
-import org.ehcache.event.EventFiring;
-import org.ehcache.event.EventOrdering;
-import org.ehcache.function.BiFunction;
-import org.ehcache.function.Function;
-import org.ehcache.function.NullaryFunction;
-import org.ehcache.jsr107.CacheResources.ListenerResources;
-import org.ehcache.jsr107.EventListenerAdaptors.EventListenerAdaptor;
-import org.ehcache.spi.loaderwriter.CacheLoaderWriter;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * @author teck
@@ -56,7 +55,6 @@ class Eh107Cache<K, V> implements Cache<K, V> {
   private final AtomicBoolean closed = new AtomicBoolean();
   private final CacheResources<K, V> cacheResources;
   private final Eh107CacheMXBean managementBean;
-  private final Eh107CacheStatisticsMXBean statisticsBean;
   private final Eh107Configuration<K, V> config;
   private final CacheLoaderWriter<? super K, V> cacheLoaderWriter;
   private final Eh107Expiry<K, V> expiry;
@@ -71,7 +69,6 @@ class Eh107Cache<K, V> implements Cache<K, V> {
     this.name = name;
     this.cacheResources = cacheResources;
     this.managementBean = new Eh107CacheMXBean(name, cacheManager, config);
-    this.statisticsBean = new Eh107CacheStatisticsMXBean(name, cacheManager, ehCache.getStatistics());
 
     for (Map.Entry<CacheEntryListenerConfiguration<K, V>, ListenerResources<K, V>> entry : cacheResources
         .getListenerResources().entrySet()) {
@@ -529,14 +526,6 @@ class Eh107Cache<K, V> implements Cache<K, V> {
   @Override
   public String toString() {
     return getClass().getSimpleName() + "[" + name + "]";
-  }
-
-  Eh107MXBean getManagementMBean() {
-    return managementBean;
-  }
-
-  Eh107MXBean getStatisticsMBean() {
-    return statisticsBean;
   }
 
   void setStatisticsEnabled(boolean enabled) {

@@ -17,14 +17,14 @@
 package org.ehcache.statistics;
 
 /**
- * @author Hung Huynh
  *
+ * @author Hung Huynh
  */
 public interface StoreOperationOutcomes {
   /**
    * The Enum GetOutcome.
    */
-  public enum GetOutcome {
+  enum GetOutcome {
 
     /** hit. */
     HIT,
@@ -35,18 +35,18 @@ public interface StoreOperationOutcomes {
   /**
    * The Enum PutOutcome.
    */
-  public enum PutOutcome {
+  enum PutOutcome {
     /** added. */
     ADDED,
     /** updated. */
     UPDATED
-  };
+  }
 
   /**
    * The Enum RemoveOutcome.
    */
-  public enum RemoveOutcome {
+  enum RemoveOutcome {
     /** success. */
     SUCCESS
-  };
+  }
 }

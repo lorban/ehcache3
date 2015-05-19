@@ -22,7 +22,6 @@ import org.ehcache.config.CacheRuntimeConfiguration;
 import org.ehcache.config.UserManagedCacheConfiguration;
 import org.ehcache.exceptions.BulkCacheWritingException;
 import org.ehcache.spi.ServiceLocator;
-import org.ehcache.statistics.CacheStatistics;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;
 
@@ -150,11 +149,6 @@ public class UserManagedCacheBuilderTest {
     @Override
     public void removeAll(Set<? extends K> keys) {
       throw new UnsupportedOperationException("Implement me!");
-    }
-    
-    @Override
-    public CacheStatistics getStatistics() {
-      throw new UnsupportedOperationException("implement me!");
     }
   }
 }
