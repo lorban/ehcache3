@@ -13,8 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.ehcache.management.stats;
 
-dependencies {
-  compile project(':api'), 'org.terracotta.internal:statistics:1.0.4-SNAPSHOT', 'org.slf4j:slf4j-api:1.7.7'
-  testCompile project(':spi-tester')
+import org.ehcache.spi.ServiceProvider;
+import org.ehcache.spi.service.ServiceConfiguration;
+import org.ehcache.statistics.StatisticsProvider;
+
+/**
+ * @author Ludovic Orban
+ */
+public class CoreStatisticsProvider implements StatisticsProvider {
+  @Override
+  public void start(ServiceConfiguration<?> config, ServiceProvider serviceProvider) {
+  }
+
+  @Override
+  public void stop() {
+  }
+
+  @Override
+  public void createStatistics(Object contextObject) {
+  }
+
+  @Override
+  public void deleteStatistics(Object contextObject) {
+  }
+
 }

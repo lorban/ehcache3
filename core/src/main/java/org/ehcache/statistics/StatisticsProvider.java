@@ -13,8 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.ehcache.statistics;
 
-dependencies {
-  compile project(':api'), 'org.terracotta.internal:statistics:1.0.4-SNAPSHOT', 'org.slf4j:slf4j-api:1.7.7'
-  testCompile project(':spi-tester')
+import org.ehcache.spi.service.Service;
+
+/**
+ * @author Ludovic Orban
+ */
+public interface StatisticsProvider extends Service {
+
+  void createStatistics(Object contextObject);
+
+  void deleteStatistics(Object contextObject);
+
 }
