@@ -17,12 +17,15 @@
 import org.ehcache.Cache;
 import org.ehcache.CacheManager;
 import org.ehcache.CacheManagerBuilder;
+import org.ehcache.config.CacheConfiguration;
 import org.ehcache.config.CacheConfigurationBuilder;
 import org.ehcache.config.ResourcePoolsBuilder;
+import org.ehcache.config.StatisticsProviderConfigurationImpl;
 import org.ehcache.config.units.EntryUnit;
-import org.ehcache.management.stats.CoreStatisticsProvider;
 import org.ehcache.management.stats.ExtendedStatisticsProvider;
 import org.junit.Test;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author Ludovic Orban
@@ -31,8 +34,16 @@ public class StrawMan {
 
 
   @Test
-  public void testStoreByValue() {
-    CacheManager cacheManager = CacheManagerBuilder.newCacheManagerBuilder().using(new ExtendedStatisticsProvider()).build(false);
+  public void test() {
+    CacheConfiguration<Long, String> cacheConfiguration = CacheConfigurationBuilder.newCacheConfigurationBuilder()
+        .withResourcePools(ResourcePoolsBuilder.newResourcePoolsBuilder().heap(10, EntryUnit.ENTRIES).build())
+        .buildConfig(Long.class, String.class);
+
+    CacheManager cacheManager = CacheManagerBuilder.newCacheManagerBuilder()
+        .withCache("aCache", cacheConfiguration)
+        .using(new ExtendedStatisticsProvider())
+        .using(new StatisticsProviderConfigurationImpl(5 * 60, TimeUnit.SECONDS, 100, 1, TimeUnit.SECONDS))
+        .build(false);
     cacheManager.init();
 
     final Cache<Long, String> cache1 = cacheManager.createCache("cache1",

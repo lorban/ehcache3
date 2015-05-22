@@ -127,12 +127,5 @@ enum StandardOperationStatistic {
     final Set<String> tags() {
         return tags;
     }
-    
-    /**
-     * Is this stat search related or not?
-     * @return
-     */
-    boolean isSearch() {
-        return false;
-    }
+
 }
