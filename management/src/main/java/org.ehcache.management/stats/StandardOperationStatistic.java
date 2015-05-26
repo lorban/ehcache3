@@ -17,16 +17,21 @@ package org.ehcache.management.stats;
 
 import org.ehcache.Ehcache;
 import org.ehcache.statistics.CacheOperationOutcomes;
+import org.terracotta.context.extended.OperationType;
+import org.terracotta.context.query.Matchers;
 import org.terracotta.context.query.Query;
+import org.terracotta.context.query.QueryBuilder;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.ehcache.management.stats.EhcacheQueryBuilder.children;
-import static org.ehcache.management.stats.EhcacheQueryBuilder.descendants;
-import static org.ehcache.management.stats.EhcacheQueryBuilder.self;
+import static org.terracotta.context.query.Matchers.identifier;
+import static org.terracotta.context.query.Matchers.not;
+import static org.terracotta.context.query.Matchers.subclassOf;
+import static org.terracotta.context.query.Queries.descendants;
+import static org.terracotta.context.query.Queries.self;
 
 
 /**
@@ -34,98 +39,104 @@ import static org.ehcache.management.stats.EhcacheQueryBuilder.self;
  *
  * @author cdennis
  */
-enum StandardOperationStatistic {
-    CACHE_LOADING(false, self(), CacheOperationOutcomes.CacheLoadingOutcome.class, "cacheLoading", "cache"),
-  
-    /** The cache get. */
-    CACHE_GET(true, self(), CacheOperationOutcomes.GetOutcome.class, "get", "cache"),
+enum StandardOperationStatistic implements OperationType {
+  CACHE_LOADING(false, self(), CacheOperationOutcomes.CacheLoadingOutcome.class, "cacheLoading", "cache"),
 
-    /** The cache put. */
-    CACHE_PUT(true, self(), CacheOperationOutcomes.PutOutcome.class, "put", "cache"),
+  /**
+   * The cache get.
+   */
+  CACHE_GET(true, self(), CacheOperationOutcomes.GetOutcome.class, "get", "cache"),
 
-    /** The cache remove. */
-    CACHE_REMOVE(true, self(), CacheOperationOutcomes.RemoveOutcome.class, "remove", "cache"),
-    
-    /** The cache remove(K, V) */
-    CACHE_CONDITIONAL_REMOVE(true, self(), CacheOperationOutcomes.ConditionalRemoveOutcome.class, "conditionalRemove", "cache"),
-    
-    /** The cache putIfAbsent. */
-    CACHE_PUT_IF_ABSENT(true, self(), CacheOperationOutcomes.PutIfAbsentOutcome.class, "putIfAbsent", "cache"),
-    
-    /** The cache replace. */
-    CACHE_REPLACE(true, self(), CacheOperationOutcomes.ReplaceOutcome.class, "replace", "cache"),
+  /**
+   * The cache put.
+   */
+  CACHE_PUT(true, self(), CacheOperationOutcomes.PutOutcome.class, "put", "cache"),
 
-    /** The evicted. */
-    EVICTION(false, self().add(children().exclude(Ehcache.class).add(descendants())), CacheOperationOutcomes.EvictionOutcome.class, "eviction");
-    
-    private final boolean required;
-    private final Query context;
-    private final Class<? extends Enum<?>> type;
-    private final String name;
-    private final Set<String> tags;
+  /**
+   * The cache remove.
+   */
+  CACHE_REMOVE(true, self(), CacheOperationOutcomes.RemoveOutcome.class, "remove", "cache"),
 
-    private StandardOperationStatistic(Class<? extends Enum<?>> type, String name, String... tags) {
-        this(false, type, name, tags);
-    }
+  /**
+   * The cache remove(K, V)
+   */
+  CACHE_CONDITIONAL_REMOVE(true, self(), CacheOperationOutcomes.ConditionalRemoveOutcome.class, "conditionalRemove", "cache"),
 
-    private StandardOperationStatistic(boolean required, Class<? extends Enum<?>> type, String name, String... tags) {
-        this(required, descendants(), type, name, tags);
-    }
+  /**
+   * The cache putIfAbsent.
+   */
+  CACHE_PUT_IF_ABSENT(true, self(), CacheOperationOutcomes.PutIfAbsentOutcome.class, "putIfAbsent", "cache"),
 
-    private StandardOperationStatistic(boolean required, Query context, Class<? extends Enum<?>> type, String name, String... tags) {
-        this.required = required;
-        this.context = context;
-        this.type = type;
-        this.name = name;
-        this.tags = Collections.unmodifiableSet(new HashSet<String>(Arrays.asList(tags)));
-    }
-    
-    /**
-     * If this statistic is required.
-     * <p>
-     * If required and this statistic is not present an exception will be thrown.
-     *
-     * @return
-     */
-    final boolean required() {
-        return required;
-    }
+  /**
+   * The cache replace.
+   */
+  CACHE_REPLACE(true, self(), CacheOperationOutcomes.ReplaceOutcome.class, "replace", "cache"),
 
-    /**
-     * Query that select context nodes for this statistic.
-     * 
-     * @return context query
-     */
-    final Query context() {
-        return context;
-    }
-    
-    /**
-     * Operation result type.
-     *
-     * @return operation result type
-     */
-    @SuppressWarnings("rawtypes")
-    final Class<? extends Enum> type() {
-        return type;
-    }
+  /**
+   * The evicted.
+   */
+  EVICTION(false, QueryBuilder.queryBuilder().children().filter(Matchers.context(identifier(not(subclassOf(Ehcache.class))))).chain(descendants()).build(), CacheOperationOutcomes.EvictionOutcome.class, "eviction");
 
-    /**
-     * The name of the statistic as found in the statistics context tree.
-     *
-     * @return the statistic name
-     */
-    final String operationName() {
-        return name;
-    }
+  private final boolean required;
+  private final Query context;
+  private final Class<? extends Enum<?>> type;
+  private final String name;
+  private final Set<String> tags;
 
-    /**
-     * A set of tags that will be on the statistic found in the statistics context tree.
-     *
-     * @return the statistic tags
-     */
-    final Set<String> tags() {
-        return tags;
-    }
+  StandardOperationStatistic(boolean required, Query context, Class<? extends Enum<?>> type, String name, String... tags) {
+    this.required = required;
+    this.context = context;
+    this.type = type;
+    this.name = name;
+    this.tags = Collections.unmodifiableSet(new HashSet<String>(Arrays.asList(tags)));
+  }
+
+  /**
+   * If this statistic is required.
+   * <p/>
+   * If required and this statistic is not present an exception will be thrown.
+   *
+   * @return
+   */
+  public final boolean required() {
+    return required;
+  }
+
+  /**
+   * Query that select context nodes for this statistic.
+   *
+   * @return context query
+   */
+  public final Query context() {
+    return context;
+  }
+
+  /**
+   * Operation result type.
+   *
+   * @return operation result type
+   */
+  @SuppressWarnings("rawtypes")
+  public final Class<? extends Enum<?>> type() {
+    return type;
+  }
+
+  /**
+   * The name of the statistic as found in the statistics context tree.
+   *
+   * @return the statistic name
+   */
+  public final String operationName() {
+    return name;
+  }
+
+  /**
+   * A set of tags that will be on the statistic found in the statistics context tree.
+   *
+   * @return the statistic tags
+   */
+  public final Set<String> tags() {
+    return tags;
+  }
 
 }

@@ -22,7 +22,7 @@ import org.ehcache.config.CacheConfigurationBuilder;
 import org.ehcache.config.ResourcePoolsBuilder;
 import org.ehcache.config.StatisticsProviderConfigurationImpl;
 import org.ehcache.config.units.EntryUnit;
-import org.ehcache.management.stats.ExtendedStatisticsProvider;
+import org.ehcache.management.stats.EhcacheStatisticsProvider;
 import org.junit.Test;
 
 import java.util.concurrent.TimeUnit;
@@ -32,7 +32,6 @@ import java.util.concurrent.TimeUnit;
  */
 public class StrawMan {
 
-
   @Test
   public void test() {
     CacheConfiguration<Long, String> cacheConfiguration = CacheConfigurationBuilder.newCacheConfigurationBuilder()
@@ -41,8 +40,8 @@ public class StrawMan {
 
     CacheManager cacheManager = CacheManagerBuilder.newCacheManagerBuilder()
         .withCache("aCache", cacheConfiguration)
-        .using(new ExtendedStatisticsProvider())
-        .using(new StatisticsProviderConfigurationImpl(5 * 60, TimeUnit.SECONDS, 100, 1, TimeUnit.SECONDS))
+        .using(new EhcacheStatisticsProvider())
+        .using(new StatisticsProviderConfigurationImpl(5 * 60, TimeUnit.SECONDS, 100, 1, TimeUnit.SECONDS, 30, TimeUnit.SECONDS))
         .build(false);
     cacheManager.init();
 
@@ -53,6 +52,5 @@ public class StrawMan {
 
     cacheManager.close();
   }
-
 
 }

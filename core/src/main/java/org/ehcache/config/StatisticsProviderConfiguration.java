@@ -32,4 +32,7 @@ public interface StatisticsProviderConfiguration extends ServiceConfiguration<St
   long historyInterval();
   TimeUnit historyIntervalUnit();
 
+  long timeToDisable();
+  TimeUnit timeToDisableUnit();
+
 }

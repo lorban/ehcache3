@@ -17,10 +17,10 @@ package org.ehcache.management.stats;
 
 import org.ehcache.Ehcache;
 import org.ehcache.config.StatisticsProviderConfiguration;
+import org.ehcache.internal.concurrent.ConcurrentHashMap;
 import org.ehcache.spi.ServiceProvider;
 import org.ehcache.spi.service.ServiceConfiguration;
 import org.ehcache.statistics.StatisticsProvider;
-import org.ehcache.util.ConcurrentWeakIdentityHashMap;
 
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executors;
@@ -29,9 +29,9 @@ import java.util.concurrent.ScheduledExecutorService;
 /**
  * @author Ludovic Orban
  */
-public class ExtendedStatisticsProvider implements StatisticsProvider {
+public class EhcacheStatisticsProvider implements StatisticsProvider {
 
-  private final ConcurrentMap<Object, EhcacheStatisticsHolder> statistics = new ConcurrentWeakIdentityHashMap<Object, EhcacheStatisticsHolder>();
+  private final ConcurrentMap<Object, EhcacheStatistics> statistics = new ConcurrentHashMap<Object, EhcacheStatistics>();
 
   private volatile StatisticsProviderConfiguration configuration;
   private volatile ScheduledExecutorService executor;
@@ -53,13 +53,16 @@ public class ExtendedStatisticsProvider implements StatisticsProvider {
   @Override
   public void createStatistics(Object contextObject) {
     if (contextObject instanceof Ehcache) {
-      statistics.putIfAbsent(contextObject, new EhcacheStatisticsHolder(contextObject, configuration, executor));
+      statistics.putIfAbsent(contextObject, new EhcacheStatistics(contextObject, configuration, executor));
     }
   }
 
   public void deleteStatistics(Object contextObject) {
     if (contextObject instanceof Ehcache) {
-      statistics.remove(contextObject);
+      EhcacheStatistics removed = statistics.remove(contextObject);
+      if (removed != null) {
+        removed.dispose();
+      }
     }
   }
 

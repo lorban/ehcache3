@@ -29,13 +29,17 @@ public class StatisticsProviderConfigurationImpl implements StatisticsProviderCo
   private int historySize;
   private long historyInterval;
   private TimeUnit historyIntervalUnit;
+  private long timeToDisable;
+  private TimeUnit timeToDisableUnit;
 
-  public StatisticsProviderConfigurationImpl(long averageWindowDuration, TimeUnit averageWindowUnit, int historySize, long historyInterval, TimeUnit historyIntervalUnit) {
+  public StatisticsProviderConfigurationImpl(long averageWindowDuration, TimeUnit averageWindowUnit, int historySize, long historyInterval, TimeUnit historyIntervalUnit, long timeToDisable, TimeUnit timeToDisableUnit) {
     this.averageWindowDuration = averageWindowDuration;
     this.averageWindowUnit = averageWindowUnit;
     this.historySize = historySize;
     this.historyInterval = historyInterval;
     this.historyIntervalUnit = historyIntervalUnit;
+    this.timeToDisable = timeToDisable;
+    this.timeToDisableUnit = timeToDisableUnit;
   }
 
   @Override
@@ -61,6 +65,16 @@ public class StatisticsProviderConfigurationImpl implements StatisticsProviderCo
   @Override
   public TimeUnit historyIntervalUnit() {
     return historyIntervalUnit;
+  }
+
+  @Override
+  public long timeToDisable() {
+    return timeToDisable;
+  }
+
+  @Override
+  public TimeUnit timeToDisableUnit() {
+    return timeToDisableUnit;
   }
 
   @Override
