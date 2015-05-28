@@ -17,11 +17,12 @@ package org.ehcache.management.stats;
 
 import org.ehcache.Ehcache;
 import org.ehcache.config.StatisticsProviderConfiguration;
-import org.ehcache.internal.concurrent.ConcurrentHashMap;
 import org.ehcache.spi.ServiceProvider;
 import org.ehcache.spi.service.ServiceConfiguration;
 import org.ehcache.statistics.StatisticsProvider;
+import org.ehcache.util.ConcurrentWeakIdentityHashMap;
 
+import java.util.Collection;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -29,9 +30,9 @@ import java.util.concurrent.ScheduledExecutorService;
 /**
  * @author Ludovic Orban
  */
-public class EhcacheStatisticsProvider implements StatisticsProvider {
+public class EhcacheStatisticsProvider implements StatisticsProvider<Ehcache> {
 
-  private final ConcurrentMap<Object, EhcacheStatistics> statistics = new ConcurrentHashMap<Object, EhcacheStatistics>();
+  private final ConcurrentMap<Ehcache, EhcacheStatistics> statistics = new ConcurrentWeakIdentityHashMap<Ehcache, EhcacheStatistics>();
 
   private volatile StatisticsProviderConfiguration configuration;
   private volatile ScheduledExecutorService executor;
@@ -51,19 +52,21 @@ public class EhcacheStatisticsProvider implements StatisticsProvider {
   }
 
   @Override
-  public void createStatistics(Object contextObject) {
-    if (contextObject instanceof Ehcache) {
-      statistics.putIfAbsent(contextObject, new EhcacheStatistics(contextObject, configuration, executor));
+  public void createStatistics(Ehcache contextObject) {
+    statistics.putIfAbsent(contextObject, new EhcacheStatistics(contextObject, configuration, executor));
+  }
+
+  @Override
+  public void deleteStatistics(Ehcache contextObject) {
+    EhcacheStatistics removed = statistics.remove(contextObject);
+    if (removed != null) {
+      removed.dispose();
     }
   }
 
-  public void deleteStatistics(Object contextObject) {
-    if (contextObject instanceof Ehcache) {
-      EhcacheStatistics removed = statistics.remove(contextObject);
-      if (removed != null) {
-        removed.dispose();
-      }
-    }
+  @Override
+  public Collection<Ehcache> contextObjects() {
+    return statistics.keySet();
   }
 
 }

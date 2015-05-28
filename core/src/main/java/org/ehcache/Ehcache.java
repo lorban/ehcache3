@@ -16,7 +16,6 @@
 
 package org.ehcache;
 
-import org.ehcache.config.CacheConfiguration;
 import org.ehcache.config.CacheRuntimeConfiguration;
 import org.ehcache.event.CacheEvent;
 import org.ehcache.events.CacheEventNotificationService;
@@ -38,6 +37,7 @@ import org.ehcache.spi.LifeCycled;
 import org.ehcache.spi.Persistable;
 import org.ehcache.spi.cache.Store;
 import org.ehcache.spi.cache.Store.ValueHolder;
+import org.ehcache.spi.loaderwriter.CacheLoaderWriter;
 import org.ehcache.statistics.BulkOps;
 import org.ehcache.statistics.CacheOperationOutcomes.CacheLoadingOutcome;
 import org.ehcache.statistics.CacheOperationOutcomes.ConditionalRemoveOutcome;
@@ -74,9 +74,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import static org.ehcache.Functions.memoize;
 import static org.ehcache.exceptions.ExceptionFactory.newCacheLoadingException;
 import static org.ehcache.exceptions.ExceptionFactory.newCacheWritingException;
-
-import org.ehcache.spi.loaderwriter.CacheLoaderWriter;
-
 import static org.terracotta.statistics.StatisticBuilder.operation;
 
 /**
@@ -154,9 +151,16 @@ public class Ehcache<K, V> implements Cache<K, V>, UserManagedCache<K, V>, Persi
     this.statusTransitioner = new StatusTransitioner(logger);
   }
 
-  @ContextAttribute("name")
+  @ContextAttribute("CacheName")
   public String getAlias() {
     return alias;
+  }
+
+  @ContextAttribute("properties")
+  public Map<String, Object> getProperties() {
+    Map<String, Object> result = new HashMap<String, Object>();
+    result.put("Setting", "CacheName");
+    return result;
   }
 
   @SuppressWarnings("unchecked")

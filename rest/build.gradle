@@ -14,4 +14,7 @@
  * limitations under the License.
  */
 
-include "api", "spi-tester", "core", "core-spi-test", "impl", "107", "xml", "cache-statistics", "rest", "integration-test", "dist", "demos/00-NoCache", "demos/01-CacheAside"
+dependencies {
+    compile project(':api'), project(':core'), project(':impl'), project(':cache-statistics')
+    compile group: 'org.terracotta', name: 'management-core', version: '5.0.0-SNAPSHOT'
+}

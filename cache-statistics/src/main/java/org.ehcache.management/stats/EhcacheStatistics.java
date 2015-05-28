@@ -44,14 +44,14 @@ public class EhcacheStatistics {
         configuration.averageWindowUnit(), configuration.historySize(), configuration.historyInterval(), configuration.historyIntervalUnit(),
         configuration.timeToDisable(), configuration.timeToDisableUnit());
 
-    statisticsContainer.registerCompoundOperation(StandardOperationStatistic.CACHE_GET, ALL_CACHE_GET_OUTCOMES, Collections.<String, Object>singletonMap("result", "all_cache_get"));
-    statisticsContainer.registerCompoundOperation(StandardOperationStatistic.CACHE_GET, ALL_CACHE_MISS_OUTCOMES, Collections.<String, Object>singletonMap("result", "all_cache_miss"));
-    statisticsContainer.registerCompoundOperation(StandardOperationStatistic.CACHE_PUT, ALL_CACHE_PUT_OUTCOMES, Collections.<String, Object>singletonMap("result", "all_cache_put"));
-    statisticsContainer.registerCompoundOperation(StandardOperationStatistic.CACHE_REMOVE, ALL_CACHE_REMOVE_OUTCOMES, Collections.<String, Object>singletonMap("result", "all_cache_remove"));
-    statisticsContainer.registerCompoundOperation(StandardOperationStatistic.CACHE_GET, GET_WITH_LOADER_OUTCOMES, Collections.<String, Object>singletonMap("result", "get_with_loader"));
-    statisticsContainer.registerCompoundOperation(StandardOperationStatistic.CACHE_GET, GET_NO_LOADER_OUTCOMES, Collections.<String, Object>singletonMap("result", "get_no_loader"));
-    statisticsContainer.registerCompoundOperation(StandardOperationStatistic.CACHE_LOADING, ALL_CACHE_LOADER_OUTCOMES, Collections.<String, Object>singletonMap("result", "all_cache_loader"));
-    statisticsContainer.registerRatio(StandardOperationStatistic.CACHE_GET, EnumSet.of(CacheOperationOutcomes.GetOutcome.HIT_NO_LOADER), ALL_CACHE_GET_OUTCOMES, Collections.<String, Object>singletonMap("ratio", "hit"));
+    statisticsContainer.registerCompoundOperation(StandardOperationStatistic.CACHE_GET, ALL_CACHE_GET_OUTCOMES, Collections.<String, Object>singletonMap("Result", "AllCacheGet"));
+    statisticsContainer.registerCompoundOperation(StandardOperationStatistic.CACHE_GET, ALL_CACHE_MISS_OUTCOMES, Collections.<String, Object>singletonMap("Result", "AllCacheMiss"));
+    statisticsContainer.registerCompoundOperation(StandardOperationStatistic.CACHE_PUT, ALL_CACHE_PUT_OUTCOMES, Collections.<String, Object>singletonMap("Result", "AllCachePut"));
+    statisticsContainer.registerCompoundOperation(StandardOperationStatistic.CACHE_REMOVE, ALL_CACHE_REMOVE_OUTCOMES, Collections.<String, Object>singletonMap("Result", "AllCacheRemove"));
+    statisticsContainer.registerCompoundOperation(StandardOperationStatistic.CACHE_GET, GET_WITH_LOADER_OUTCOMES, Collections.<String, Object>singletonMap("Result", "GetWithLoader"));
+    statisticsContainer.registerCompoundOperation(StandardOperationStatistic.CACHE_GET, GET_NO_LOADER_OUTCOMES, Collections.<String, Object>singletonMap("Result", "GetNoLoader"));
+    statisticsContainer.registerCompoundOperation(StandardOperationStatistic.CACHE_LOADING, ALL_CACHE_LOADER_OUTCOMES, Collections.<String, Object>singletonMap("Result", "AllCacheLoader"));
+    statisticsContainer.registerRatio(StandardOperationStatistic.CACHE_GET, EnumSet.of(CacheOperationOutcomes.GetOutcome.HIT_NO_LOADER), ALL_CACHE_GET_OUTCOMES, Collections.<String, Object>singletonMap("Ratio", "Hit"));
   }
 
   public void dispose() {

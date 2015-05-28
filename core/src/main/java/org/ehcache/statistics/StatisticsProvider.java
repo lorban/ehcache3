@@ -17,13 +17,17 @@ package org.ehcache.statistics;
 
 import org.ehcache.spi.service.Service;
 
+import java.util.Collection;
+
 /**
  * @author Ludovic Orban
  */
-public interface StatisticsProvider extends Service {
+public interface StatisticsProvider<T> extends Service {
 
-  void createStatistics(Object contextObject);
+  void createStatistics(T contextObject);
 
-  void deleteStatistics(Object contextObject);
+  void deleteStatistics(T contextObject);
+
+  Collection<T> contextObjects();
 
 }
