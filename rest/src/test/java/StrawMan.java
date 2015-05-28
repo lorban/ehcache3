@@ -22,8 +22,9 @@ import org.ehcache.config.CacheConfigurationBuilder;
 import org.ehcache.config.ResourcePoolsBuilder;
 import org.ehcache.config.StatisticsProviderConfigurationImpl;
 import org.ehcache.config.units.EntryUnit;
+import org.ehcache.mm.EhcacheManagementProvider;
 import org.ehcache.management.rest.RestProvider;
-import org.ehcache.management.stats.EhcacheStatisticsProvider;
+import org.ehcache.mm.EhcacheStatisticsProvider;
 import org.junit.Test;
 import org.terracotta.management.capabilities.Capability;
 
@@ -44,6 +45,7 @@ public class StrawMan {
     RestProvider restProvider = new RestProvider();
     CacheManager cacheManager = CacheManagerBuilder.newCacheManagerBuilder()
         .withCache("aCache", cacheConfiguration)
+        .using(new EhcacheManagementProvider())
         .using(new EhcacheStatisticsProvider())
         .using(new StatisticsProviderConfigurationImpl(5 * 60, TimeUnit.SECONDS, 100, 1, TimeUnit.SECONDS, 30, TimeUnit.SECONDS))
         .using(restProvider)
@@ -55,7 +57,8 @@ public class StrawMan {
             .buildConfig(Long.class, String.class));
 
 
-    Set<Capability> objects = restProvider.listCapabilities();
+    Set<Capability> monitoringCapabilities = restProvider.listMonitoringCapabilities();
+    Set<Capability> managementCapabilities = restProvider.listManagementCapabilities();
 
 
     cacheManager.close();

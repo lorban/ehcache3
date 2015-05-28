@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.ehcache.statistics;
+package org.ehcache.mm;
 
 import org.ehcache.spi.service.Service;
 

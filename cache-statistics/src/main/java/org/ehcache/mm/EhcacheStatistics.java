@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.ehcache.management.stats;
+package org.ehcache.mm;
 
 import org.ehcache.config.StatisticsProviderConfiguration;
 import org.ehcache.statistics.CacheOperationOutcomes;

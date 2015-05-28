@@ -22,7 +22,7 @@ import org.ehcache.config.CacheConfigurationBuilder;
 import org.ehcache.config.ResourcePoolsBuilder;
 import org.ehcache.config.StatisticsProviderConfigurationImpl;
 import org.ehcache.config.units.EntryUnit;
-import org.ehcache.management.stats.EhcacheStatisticsProvider;
+import org.ehcache.mm.EhcacheStatisticsProvider;
 import org.junit.Test;
 
 import java.util.concurrent.TimeUnit;

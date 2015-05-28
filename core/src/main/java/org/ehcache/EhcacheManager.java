@@ -37,7 +37,8 @@ import org.ehcache.spi.loaderwriter.WriteBehindConfiguration;
 import org.ehcache.spi.loaderwriter.WriteBehindDecoratorLoaderWriterProvider;
 import org.ehcache.spi.service.Service;
 import org.ehcache.spi.service.ServiceConfiguration;
-import org.ehcache.statistics.StatisticsProvider;
+import org.ehcache.mm.ManagementProvider;
+import org.ehcache.mm.StatisticsProvider;
 import org.ehcache.util.ClassLoading;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -313,8 +314,9 @@ public class EhcacheManager implements PersistentCacheManager {
       
     });
 
-    final StatisticsProvider statisticsProvider = serviceLocator.findService(StatisticsProvider.class);
- 
+    final StatisticsProvider<Ehcache> statisticsProvider = serviceLocator.findService(StatisticsProvider.class);
+    final ManagementProvider<Ehcache> managementProvider = serviceLocator.findService(ManagementProvider.class);
+
     RuntimeConfiguration<K, V> runtimeConfiguration = new RuntimeConfiguration<K, V>(config, evtService);
     runtimeConfiguration.addCacheConfigurationListener(store.getConfigurationChangeListeners());
     final Ehcache<K, V> ehCache = new Ehcache<K, V>(runtimeConfiguration, store, decorator, evtService,
@@ -324,14 +326,20 @@ public class EhcacheManager implements PersistentCacheManager {
       @Override
       public void init() throws Exception {
         StatisticsManager.associate(ehCache).withParent(EhcacheManager.this);
-        if (statisticsProvider!= null) {
+        if (statisticsProvider != null) {
           statisticsProvider.createStatistics(ehCache);
+        }
+        if (managementProvider != null) {
+          managementProvider.registerActions(ehCache);
         }
       }
 
       @Override
       public void close() throws Exception {
-        if (statisticsProvider!= null) {
+        if (managementProvider != null) {
+          managementProvider.unregisterActions(ehCache);
+        }
+        if (statisticsProvider != null) {
           statisticsProvider.deleteStatistics(ehCache);
         }
         StatisticsManager.dissociate(ehCache).fromParent(EhcacheManager.this);

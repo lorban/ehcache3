@@ -13,26 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.ehcache.config;
+package org.ehcache.mm;
 
-import org.ehcache.spi.service.ServiceConfiguration;
-import org.ehcache.mm.StatisticsProvider;
+import org.ehcache.spi.service.Service;
 
-import java.util.concurrent.TimeUnit;
+import java.util.Collection;
 
 /**
  * @author Ludovic Orban
  */
-public interface StatisticsProviderConfiguration extends ServiceConfiguration<StatisticsProvider> {
+public interface ManagementProvider<T> extends Service {
 
-  long averageWindowDuration();
-  TimeUnit averageWindowUnit();
+  void registerActions(T managedObject);
 
-  int historySize();
-  long historyInterval();
-  TimeUnit historyIntervalUnit();
+  void unregisterActions(T managedObject);
 
-  long timeToDisable();
-  TimeUnit timeToDisableUnit();
+  Collection<?> actions();
 
 }

@@ -15,7 +15,7 @@
  */
 package org.ehcache.config;
 
-import org.ehcache.statistics.StatisticsProvider;
+import org.ehcache.mm.StatisticsProvider;
 
 import java.util.concurrent.TimeUnit;
 
