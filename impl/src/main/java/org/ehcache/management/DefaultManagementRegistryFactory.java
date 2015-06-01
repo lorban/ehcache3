@@ -13,21 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.ehcache.mm;
+package org.ehcache.management;
 
-import org.ehcache.spi.service.Service;
-
-import java.util.Collection;
+import org.ehcache.spi.ServiceLocator;
+import org.ehcache.spi.service.ServiceConfiguration;
+import org.ehcache.spi.service.ServiceFactory;
 
 /**
  * @author Ludovic Orban
  */
-public interface StatisticsProvider<T> extends Service {
+public class DefaultManagementRegistryFactory implements ServiceFactory<DefaultManagementRegistry> {
+  @Override
+  public DefaultManagementRegistry create(ServiceConfiguration<DefaultManagementRegistry> serviceConfiguration, ServiceLocator serviceLocator) {
+    return new DefaultManagementRegistry();
+  }
 
-  void createStatistics(T contextObject);
-
-  void deleteStatistics(T contextObject);
-
-  Collection<T> contextObjects();
-
+  @Override
+  public Class<DefaultManagementRegistry> getServiceType() {
+    return DefaultManagementRegistry.class;
+  }
 }

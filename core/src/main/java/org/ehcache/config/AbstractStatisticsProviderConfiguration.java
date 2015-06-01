@@ -15,14 +15,12 @@
  */
 package org.ehcache.config;
 
-import org.ehcache.mm.StatisticsProvider;
-
 import java.util.concurrent.TimeUnit;
 
 /**
  * @author Ludovic Orban
  */
-public class StatisticsProviderConfigurationImpl implements StatisticsProviderConfiguration {
+public abstract class AbstractStatisticsProviderConfiguration implements StatisticsProviderConfiguration {
 
   private long averageWindowDuration;
   private TimeUnit averageWindowUnit;
@@ -32,7 +30,7 @@ public class StatisticsProviderConfigurationImpl implements StatisticsProviderCo
   private long timeToDisable;
   private TimeUnit timeToDisableUnit;
 
-  public StatisticsProviderConfigurationImpl(long averageWindowDuration, TimeUnit averageWindowUnit, int historySize, long historyInterval, TimeUnit historyIntervalUnit, long timeToDisable, TimeUnit timeToDisableUnit) {
+  public AbstractStatisticsProviderConfiguration(long averageWindowDuration, TimeUnit averageWindowUnit, int historySize, long historyInterval, TimeUnit historyIntervalUnit, long timeToDisable, TimeUnit timeToDisableUnit) {
     this.averageWindowDuration = averageWindowDuration;
     this.averageWindowUnit = averageWindowUnit;
     this.historySize = historySize;
@@ -77,8 +75,4 @@ public class StatisticsProviderConfigurationImpl implements StatisticsProviderCo
     return timeToDisableUnit;
   }
 
-  @Override
-  public Class<StatisticsProvider> getServiceType() {
-    return StatisticsProvider.class;
-  }
 }

@@ -13,21 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.ehcache.mm;
+package org.ehcache.management;
 
 import org.ehcache.spi.service.Service;
 
 import java.util.Collection;
+import java.util.Map;
 
 /**
  * @author Ludovic Orban
  */
-public interface ManagementProvider<T> extends Service {
+public interface ManagementRegistry extends Service {
 
-  void registerActions(T managedObject);
+  <T> void support(ManagementProvider<T> managementProvider);
 
-  void unregisterActions(T managedObject);
+  <T> void unsupport(ManagementProvider<T> managementProvider);
 
-  Collection<?> actions();
+  <T> void register(Class<T> managedType, T managedObject);
+
+  <T> void unregister(Class<T> managedType, T managedObject);
+
+  <T> Map<String, Collection<T>> capabilities();
 
 }

@@ -13,56 +13,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.ehcache.mm;
+package org.ehcache.management;
 
 import org.ehcache.Ehcache;
 
 /**
  * @author Ludovic Orban
  */
-public class EhcacheActionManager<K, V> {
+public class EhcacheActionWrapper<K, V> {
 
   private final Ehcache<K, V> ehcache;
 
-  public EhcacheActionManager(Ehcache<K, V> ehcache) {
+  public EhcacheActionWrapper(Ehcache<K, V> ehcache) {
     this.ehcache = ehcache;
   }
 
+  @Exposed
   public void clear() {
     ehcache.clear();
   }
 
-  public V get(K key) {
+  @Exposed
+  public V get(@Named("key") K key) {
     return ehcache.get(key);
   }
 
-  Class<V> get_returnType() {
-    return ehcache.getRuntimeConfiguration().getValueType();
-  }
-
-  String get_parameterName_0() {
-    return "key";
-  }
-  Class<K> get_parameterType_0() {
-    return ehcache.getRuntimeConfiguration().getKeyType();
-  }
-
-  public void put(K key, V value) {
+  @Exposed
+  public void put(@Named("key") K key, @Named("value") V value) {
     ehcache.put(key, value);
-  }
-
-  String put_parameterName_0() {
-    return "key";
-  }
-  Class<K> put_parameterType_0() {
-    return ehcache.getRuntimeConfiguration().getKeyType();
-  }
-
-  String put_parameterName_1() {
-    return "value";
-  }
-  Class<V> put_parameterType_1() {
-    return ehcache.getRuntimeConfiguration().getValueType();
   }
 
 }

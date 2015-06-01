@@ -13,14 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.ehcache.mm;
+package org.ehcache.management;
 
+import org.ehcache.Ehcache;
 import org.ehcache.config.StatisticsProviderConfiguration;
 import org.ehcache.statistics.CacheOperationOutcomes;
+import org.terracotta.context.ContextManager;
+import org.terracotta.context.TreeNode;
 import org.terracotta.context.extended.StatisticsRegistry;
+import org.terracotta.management.capabilities.Capability;
+import org.terracotta.management.capabilities.CapabilityCategory;
+import org.terracotta.management.capabilities.StatisticCapability;
+import org.terracotta.management.stats.StatisticType;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 
@@ -38,8 +49,10 @@ public class EhcacheStatistics {
   private static final Set<CacheOperationOutcomes.CacheLoadingOutcome> ALL_CACHE_LOADER_OUTCOMES = EnumSet.allOf(CacheOperationOutcomes.CacheLoadingOutcome.class);
 
   private final StatisticsRegistry statisticsContainer;
+  private final Ehcache<?, ?> contextObject;
 
-  EhcacheStatistics(Object contextObject, StatisticsProviderConfiguration configuration, ScheduledExecutorService executor) {
+  EhcacheStatistics(Ehcache<?, ?> contextObject, StatisticsProviderConfiguration configuration, ScheduledExecutorService executor) {
+    this.contextObject = contextObject;
     this.statisticsContainer = new StatisticsRegistry(StandardOperationStatistic.class, contextObject, executor, configuration.averageWindowDuration(),
         configuration.averageWindowUnit(), configuration.historySize(), configuration.historyInterval(), configuration.historyIntervalUnit(),
         configuration.timeToDisable(), configuration.timeToDisableUnit());
@@ -52,6 +65,58 @@ public class EhcacheStatistics {
     statisticsContainer.registerCompoundOperation(StandardOperationStatistic.CACHE_GET, GET_NO_LOADER_OUTCOMES, Collections.<String, Object>singletonMap("Result", "GetNoLoader"));
     statisticsContainer.registerCompoundOperation(StandardOperationStatistic.CACHE_LOADING, ALL_CACHE_LOADER_OUTCOMES, Collections.<String, Object>singletonMap("Result", "AllCacheLoader"));
     statisticsContainer.registerRatio(StandardOperationStatistic.CACHE_GET, EnumSet.of(CacheOperationOutcomes.GetOutcome.HIT_NO_LOADER), ALL_CACHE_GET_OUTCOMES, Collections.<String, Object>singletonMap("Ratio", "Hit"));
+  }
+
+  public Set<Capability> capabilities() {
+    Set<Capability> capabilities = new HashSet<Capability>();
+
+    TreeNode treeNode = ContextManager.nodeFor(contextObject);
+    Set<Capability> nodeCapabilities = buildCapabilities(treeNode);
+    capabilities.addAll(nodeCapabilities);
+
+    return capabilities;
+  }
+
+  private Set<Capability> buildCapabilities(TreeNode treeNode) {
+    Set<Capability> capabilities = new HashSet<Capability>();
+
+    Object attributesProperty = treeNode.getContext().attributes().get("properties");
+    if (attributesProperty != null && attributesProperty instanceof Map) {
+      Map<String, Object> attributes = (Map<String, Object>) attributesProperty;
+
+      Object setting = attributes.get("Setting");
+      if (setting != null) {
+        capabilities.add(new StatisticCapability(setting.toString(), StatisticType.SETTING));
+      }
+
+      Object resultObject = attributes.get("Result");
+      if (resultObject != null) {
+        String resultName = resultObject.toString();
+
+        List<Capability> statistics = new ArrayList<Capability>();
+        statistics.add(new StatisticCapability(resultName + "Count", StatisticType.SAMPLED_COUNTER));
+        statistics.add(new StatisticCapability(resultName + "Rate", StatisticType.SAMPLED_RATE));
+        statistics.add(new StatisticCapability(resultName + "LatencyMinimum", StatisticType.SAMPLED_DURATION));
+        statistics.add(new StatisticCapability(resultName + "LatencyMaximum", StatisticType.SAMPLED_DURATION));
+        statistics.add(new StatisticCapability(resultName + "LatencyAverage", StatisticType.SAMPLED_RATIO));
+
+        capabilities.add(new CapabilityCategory(resultName, statistics));
+      }
+
+      Object ratioObject = attributes.get("Ratio");
+      if (ratioObject != null) {
+        capabilities.add(new StatisticCapability(ratioObject.toString() + "Ratio", StatisticType.RATIO));
+      }
+
+    }
+
+    Set<? extends TreeNode> children = treeNode.getChildren();
+    for (TreeNode child : children) {
+      Set<Capability> childCapabilities = buildCapabilities(child);
+      capabilities.addAll(childCapabilities);
+    }
+
+    return capabilities;
   }
 
   public void dispose() {

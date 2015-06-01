@@ -13,44 +13,49 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.ehcache.mm;
+package org.ehcache.management;
 
-import org.ehcache.Ehcache;
+import org.ehcache.EhcacheManager;
 import org.ehcache.spi.ServiceProvider;
 import org.ehcache.spi.service.ServiceConfiguration;
-import org.ehcache.util.ConcurrentWeakIdentityHashMap;
 
-import java.util.Collection;
-import java.util.concurrent.ConcurrentMap;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * @author Ludovic Orban
  */
-public class EhcacheManagementProvider implements ManagementProvider<Ehcache<?, ?>> {
+public class EhcacheManagerActionProvider implements ManagementProvider<EhcacheManager> {
 
-  private final ConcurrentMap<Ehcache, EhcacheActionManager> actions = new ConcurrentWeakIdentityHashMap<Ehcache, EhcacheActionManager>();
+  private volatile ManagementRegistry managementRegistry;
 
   @Override
   public void start(ServiceConfiguration<?> config, ServiceProvider serviceProvider) {
+    managementRegistry = serviceProvider.findService(ManagementRegistry.class);
+    managementRegistry.support(this);
   }
 
   @Override
   public void stop() {
-    actions.clear();
+    managementRegistry.unsupport(this);
   }
 
   @Override
-  public void registerActions(Ehcache<?, ?> ehcache) {
-    actions.putIfAbsent(ehcache, new EhcacheActionManager(ehcache));
+  public void register(EhcacheManager ehcacheManager) {
   }
 
   @Override
-  public void unregisterActions(Ehcache ehcache) {
-    actions.remove(ehcache);
+  public void unregister(EhcacheManager ehcacheManager) {
   }
 
   @Override
-  public Collection<?> actions() {
-    return actions.values();
+  public Class<EhcacheManager> managedType() {
+    return EhcacheManager.class;
   }
+
+  @Override
+  public Set<?> capabilities() {
+    return new HashSet<Object>();
+  }
+
 }

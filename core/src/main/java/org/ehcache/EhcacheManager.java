@@ -27,6 +27,7 @@ import org.ehcache.event.CacheEventListenerFactory;
 import org.ehcache.events.CacheEventNotificationListenerServiceProvider;
 import org.ehcache.events.CacheEventNotificationService;
 import org.ehcache.events.CacheManagerListener;
+import org.ehcache.management.ManagementRegistry;
 import org.ehcache.spi.LifeCycled;
 import org.ehcache.spi.Persistable;
 import org.ehcache.spi.ServiceLocator;
@@ -37,8 +38,6 @@ import org.ehcache.spi.loaderwriter.WriteBehindConfiguration;
 import org.ehcache.spi.loaderwriter.WriteBehindDecoratorLoaderWriterProvider;
 import org.ehcache.spi.service.Service;
 import org.ehcache.spi.service.ServiceConfiguration;
-import org.ehcache.mm.ManagementProvider;
-import org.ehcache.mm.StatisticsProvider;
 import org.ehcache.util.ClassLoading;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -314,8 +313,7 @@ public class EhcacheManager implements PersistentCacheManager {
       
     });
 
-    final StatisticsProvider<Ehcache> statisticsProvider = serviceLocator.findService(StatisticsProvider.class);
-    final ManagementProvider<Ehcache> managementProvider = serviceLocator.findService(ManagementProvider.class);
+    final ManagementRegistry managementRegistry = serviceLocator.findService(ManagementRegistry.class);
 
     RuntimeConfiguration<K, V> runtimeConfiguration = new RuntimeConfiguration<K, V>(config, evtService);
     runtimeConfiguration.addCacheConfigurationListener(store.getConfigurationChangeListeners());
@@ -326,21 +324,15 @@ public class EhcacheManager implements PersistentCacheManager {
       @Override
       public void init() throws Exception {
         StatisticsManager.associate(ehCache).withParent(EhcacheManager.this);
-        if (statisticsProvider != null) {
-          statisticsProvider.createStatistics(ehCache);
-        }
-        if (managementProvider != null) {
-          managementProvider.registerActions(ehCache);
+        if (managementRegistry != null) {
+          managementRegistry.register(Ehcache.class, ehCache);
         }
       }
 
       @Override
       public void close() throws Exception {
-        if (managementProvider != null) {
-          managementProvider.unregisterActions(ehCache);
-        }
-        if (statisticsProvider != null) {
-          statisticsProvider.deleteStatistics(ehCache);
+        if (managementRegistry != null) {
+          managementRegistry.unregister(Ehcache.class, ehCache);
         }
         StatisticsManager.dissociate(ehCache).fromParent(EhcacheManager.this);
       }
@@ -418,6 +410,10 @@ public class EhcacheManager implements PersistentCacheManager {
       }
 
       statisticsManager.root(this);
+      ManagementRegistry managementRegistry = serviceLocator.findService(ManagementRegistry.class);
+      if (managementRegistry != null) {
+        managementRegistry.register(EhcacheManager.class, this);
+      }
 
       Deque<String> initiatedCaches = new ArrayDeque<String>();
       try {
@@ -453,6 +449,10 @@ public class EhcacheManager implements PersistentCacheManager {
   public void close() {
     final StatusTransitioner.Transition st = statusTransitioner.close();
 
+    ManagementRegistry managementRegistry = serviceLocator.findService(ManagementRegistry.class);
+    if (managementRegistry != null) {
+      managementRegistry.unregister(EhcacheManager.class, this);
+    }
     statisticsManager.uproot(this);
 
     Exception firstException = null;

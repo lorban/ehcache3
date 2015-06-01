@@ -20,15 +20,17 @@ import org.ehcache.CacheManagerBuilder;
 import org.ehcache.config.CacheConfiguration;
 import org.ehcache.config.CacheConfigurationBuilder;
 import org.ehcache.config.ResourcePoolsBuilder;
-import org.ehcache.config.StatisticsProviderConfigurationImpl;
 import org.ehcache.config.units.EntryUnit;
-import org.ehcache.mm.EhcacheManagementProvider;
+import org.ehcache.management.EhcacheActionProvider;
+import org.ehcache.management.EhcacheManagerActionProvider;
+import org.ehcache.management.EhcacheStatisticsProvider;
+import org.ehcache.management.EhcacheStatisticsProviderConfiguration;
 import org.ehcache.management.rest.RestProvider;
-import org.ehcache.mm.EhcacheStatisticsProvider;
 import org.junit.Test;
 import org.terracotta.management.capabilities.Capability;
 
-import java.util.Set;
+import java.util.Collection;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -45,9 +47,10 @@ public class StrawMan {
     RestProvider restProvider = new RestProvider();
     CacheManager cacheManager = CacheManagerBuilder.newCacheManagerBuilder()
         .withCache("aCache", cacheConfiguration)
-        .using(new EhcacheManagementProvider())
+        .using(new EhcacheManagerActionProvider())
+        .using(new EhcacheActionProvider())
         .using(new EhcacheStatisticsProvider())
-        .using(new StatisticsProviderConfigurationImpl(5 * 60, TimeUnit.SECONDS, 100, 1, TimeUnit.SECONDS, 30, TimeUnit.SECONDS))
+        .using(new EhcacheStatisticsProviderConfiguration(5 * 60, TimeUnit.SECONDS, 100, 1, TimeUnit.SECONDS, 30, TimeUnit.SECONDS))
         .using(restProvider)
         .build(false);
     cacheManager.init();
@@ -56,10 +59,7 @@ public class StrawMan {
         CacheConfigurationBuilder.newCacheConfigurationBuilder().withResourcePools(ResourcePoolsBuilder.newResourcePoolsBuilder().heap(1, EntryUnit.ENTRIES))
             .buildConfig(Long.class, String.class));
 
-
-    Set<Capability> monitoringCapabilities = restProvider.listMonitoringCapabilities();
-    Set<Capability> managementCapabilities = restProvider.listManagementCapabilities();
-
+    Map<String, Collection<Capability>> capabilities = restProvider.listManagementCapabilities();
 
     cacheManager.close();
   }
