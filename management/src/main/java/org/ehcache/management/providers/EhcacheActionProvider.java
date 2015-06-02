@@ -19,8 +19,9 @@ import org.ehcache.Ehcache;
 import org.ehcache.management.annotations.Exposed;
 import org.ehcache.management.annotations.Named;
 import org.ehcache.util.ConcurrentWeakIdentityHashMap;
-import org.terracotta.management.capabilities.CallCapability;
 import org.terracotta.management.capabilities.Capability;
+import org.terracotta.management.capabilities.descriptors.CallDescriptor;
+import org.terracotta.management.capabilities.descriptors.Descriptor;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -54,12 +55,12 @@ public class EhcacheActionProvider implements ManagementProvider<Ehcache<?, ?>> 
   }
 
   @Override
-  public Set<Capability> capabilities() {
+  public Set<Descriptor> capabilities() {
     return listManagementCapabilities();
   }
 
-  private Set<Capability> listManagementCapabilities() {
-    Set<Capability> capabilities = new HashSet<Capability>();
+  private Set<Descriptor> listManagementCapabilities() {
+    Set<Descriptor> capabilities = new HashSet<Descriptor>();
 
     Collection actions = this.actions.values();
     for (Object action : actions) {
@@ -101,12 +102,12 @@ public class EhcacheActionProvider implements ManagementProvider<Ehcache<?, ?>> 
           }
         }
 
-        List<CallCapability.Parameter> parameters = new ArrayList<CallCapability.Parameter>();
+        List<CallDescriptor.Parameter> parameters = new ArrayList<CallDescriptor.Parameter>();
         for (int i = 0; i < parameterTypes.length; i++) {
-          parameters.add(new CallCapability.Parameter(parameterNames.get(i), parameterTypes[i].getName()));
+          parameters.add(new CallDescriptor.Parameter(parameterNames.get(i), parameterTypes[i].getName()));
         }
 
-        capabilities.add(new CallCapability(methodName, returnType.getName(), parameters));
+        capabilities.add(new CallDescriptor(methodName, returnType.getName(), parameters));
       }
     }
 

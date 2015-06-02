@@ -22,8 +22,9 @@ import org.terracotta.context.ContextManager;
 import org.terracotta.context.TreeNode;
 import org.terracotta.context.extended.StatisticsRegistry;
 import org.terracotta.management.capabilities.Capability;
-import org.terracotta.management.capabilities.CapabilityCategory;
-import org.terracotta.management.capabilities.StatisticCapability;
+import org.terracotta.management.capabilities.descriptors.Descriptor;
+import org.terracotta.management.capabilities.descriptors.DescriptorCategory;
+import org.terracotta.management.capabilities.descriptors.StatisticDescriptor;
 import org.terracotta.management.stats.StatisticType;
 
 import java.util.ArrayList;
@@ -67,18 +68,18 @@ public class EhcacheStatistics {
     statisticsContainer.registerRatio(StandardOperationStatistic.CACHE_GET, EnumSet.of(CacheOperationOutcomes.GetOutcome.HIT_NO_LOADER), ALL_CACHE_GET_OUTCOMES, Collections.<String, Object>singletonMap("Ratio", "Hit"));
   }
 
-  public Set<Capability> capabilities() {
-    Set<Capability> capabilities = new HashSet<Capability>();
+  public Set<Descriptor> capabilities() {
+    Set<Descriptor> capabilities = new HashSet<Descriptor>();
 
     TreeNode treeNode = ContextManager.nodeFor(contextObject);
-    Set<Capability> nodeCapabilities = buildCapabilities(treeNode);
+    Set<Descriptor> nodeCapabilities = buildCapabilities(treeNode);
     capabilities.addAll(nodeCapabilities);
 
     return capabilities;
   }
 
-  private Set<Capability> buildCapabilities(TreeNode treeNode) {
-    Set<Capability> capabilities = new HashSet<Capability>();
+  private Set<Descriptor> buildCapabilities(TreeNode treeNode) {
+    Set<Descriptor> capabilities = new HashSet<Descriptor>();
 
     Object attributesProperty = treeNode.getContext().attributes().get("properties");
     if (attributesProperty != null && attributesProperty instanceof Map) {
@@ -86,33 +87,33 @@ public class EhcacheStatistics {
 
       Object setting = attributes.get("Setting");
       if (setting != null) {
-        capabilities.add(new StatisticCapability(setting.toString(), StatisticType.SETTING));
+        capabilities.add(new StatisticDescriptor(setting.toString(), StatisticType.SETTING));
       }
 
       Object resultObject = attributes.get("Result");
       if (resultObject != null) {
         String resultName = resultObject.toString();
 
-        List<Capability> statistics = new ArrayList<Capability>();
-        statistics.add(new StatisticCapability(resultName + "Count", StatisticType.SAMPLED_COUNTER));
-        statistics.add(new StatisticCapability(resultName + "Rate", StatisticType.SAMPLED_RATE));
-        statistics.add(new StatisticCapability(resultName + "LatencyMinimum", StatisticType.SAMPLED_DURATION));
-        statistics.add(new StatisticCapability(resultName + "LatencyMaximum", StatisticType.SAMPLED_DURATION));
-        statistics.add(new StatisticCapability(resultName + "LatencyAverage", StatisticType.SAMPLED_RATIO));
+        List<Descriptor> statistics = new ArrayList<Descriptor>();
+        statistics.add(new StatisticDescriptor(resultName + "Count", StatisticType.SAMPLED_COUNTER));
+        statistics.add(new StatisticDescriptor(resultName + "Rate", StatisticType.SAMPLED_RATE));
+        statistics.add(new StatisticDescriptor(resultName + "LatencyMinimum", StatisticType.SAMPLED_DURATION));
+        statistics.add(new StatisticDescriptor(resultName + "LatencyMaximum", StatisticType.SAMPLED_DURATION));
+        statistics.add(new StatisticDescriptor(resultName + "LatencyAverage", StatisticType.SAMPLED_RATIO));
 
-        capabilities.add(new CapabilityCategory(resultName, statistics));
+        capabilities.add(new DescriptorCategory(resultName, statistics));
       }
 
       Object ratioObject = attributes.get("Ratio");
       if (ratioObject != null) {
-        capabilities.add(new StatisticCapability(ratioObject.toString() + "Ratio", StatisticType.RATIO));
+        capabilities.add(new StatisticDescriptor(ratioObject.toString() + "Ratio", StatisticType.RATIO));
       }
 
     }
 
     Set<? extends TreeNode> children = treeNode.getChildren();
     for (TreeNode child : children) {
-      Set<Capability> childCapabilities = buildCapabilities(child);
+      Set<Descriptor> childCapabilities = buildCapabilities(child);
       capabilities.addAll(childCapabilities);
     }
 
