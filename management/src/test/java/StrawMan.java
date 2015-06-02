@@ -57,7 +57,7 @@ public class StrawMan {
         CacheConfigurationBuilder.newCacheConfigurationBuilder().withResourcePools(ResourcePoolsBuilder.newResourcePoolsBuilder().heap(1, EntryUnit.ENTRIES))
             .buildConfig(Long.class, String.class));
 
-    Map<String, Collection<Capability>> capabilities = capabilitiesCollectorService.listManagementCapabilities();
+    Collection<Capability> capabilities = capabilitiesCollectorService.listManagementCapabilities();
 
     cacheManager.close();
   }
@@ -76,7 +76,7 @@ public class StrawMan {
       managementRegistry = null;
     }
 
-    public Map<String, Collection<Capability>> listManagementCapabilities() {
+    public <T> Collection<T> listManagementCapabilities() {
       return managementRegistry.capabilities();
     }
 

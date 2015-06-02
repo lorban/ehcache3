@@ -41,6 +41,11 @@ public class EhcacheActionWrapper<K, V> {
   }
 
   @Exposed
+  public void remove(@Named("key") K key) {
+    ehcache.remove(key);
+  }
+
+  @Exposed
   public void put(@Named("key") K key, @Named("value") V value) {
     ehcache.put(key, value);
   }

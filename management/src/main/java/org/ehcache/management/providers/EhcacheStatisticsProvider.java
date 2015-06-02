@@ -18,7 +18,6 @@ package org.ehcache.management.providers;
 import org.ehcache.Ehcache;
 import org.ehcache.management.config.StatisticsProviderConfiguration;
 import org.ehcache.util.ConcurrentWeakIdentityHashMap;
-import org.terracotta.management.capabilities.Capability;
 import org.terracotta.management.capabilities.descriptors.Descriptor;
 
 import java.util.HashSet;
@@ -41,6 +40,10 @@ public class EhcacheStatisticsProvider implements ManagementProvider<Ehcache> {
     this.executor = executor;
   }
 
+  public StatisticsProviderConfiguration getConfiguration() {
+    return configuration;
+  }
+
   @Override
   public void register(Ehcache ehcache) {
     statistics.putIfAbsent(ehcache, new EhcacheStatistics(ehcache, configuration, executor));
@@ -60,7 +63,7 @@ public class EhcacheStatisticsProvider implements ManagementProvider<Ehcache> {
   }
 
   @Override
-  public Set<Descriptor> capabilities() {
+  public Set<Descriptor> descriptions() {
     Set<Descriptor> capabilities = new HashSet<Descriptor>();
     for (EhcacheStatistics ehcacheStatistics : this.statistics.values()) {
       capabilities.addAll(ehcacheStatistics.capabilities());

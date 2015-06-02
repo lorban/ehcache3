@@ -19,7 +19,6 @@ import org.ehcache.Ehcache;
 import org.ehcache.management.annotations.Exposed;
 import org.ehcache.management.annotations.Named;
 import org.ehcache.util.ConcurrentWeakIdentityHashMap;
-import org.terracotta.management.capabilities.Capability;
 import org.terracotta.management.capabilities.descriptors.CallDescriptor;
 import org.terracotta.management.capabilities.descriptors.Descriptor;
 
@@ -55,7 +54,7 @@ public class EhcacheActionProvider implements ManagementProvider<Ehcache<?, ?>> 
   }
 
   @Override
-  public Set<Descriptor> capabilities() {
+  public Set<Descriptor> descriptions() {
     return listManagementCapabilities();
   }
 

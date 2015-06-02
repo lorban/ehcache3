@@ -16,11 +16,17 @@
 package org.ehcache.management.registry;
 
 import org.ehcache.management.ManagementRegistry;
+import org.ehcache.management.config.StatisticsProviderConfiguration;
+import org.ehcache.management.providers.EhcacheStatisticsProvider;
 import org.ehcache.management.providers.ManagementProvider;
 import org.ehcache.spi.ServiceProvider;
 import org.ehcache.spi.service.ServiceConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.terracotta.management.capabilities.ActionsCapability;
+import org.terracotta.management.capabilities.Capability;
+import org.terracotta.management.capabilities.StatisticsCapability;
+import org.terracotta.management.capabilities.descriptors.Descriptor;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -96,21 +102,38 @@ public class DefaultManagementRegistry implements ManagementRegistry {
   }
 
   @Override
-  public <T> Map<String, Collection<T>> capabilities() {
+  public <T> Collection<T> capabilities() {
     Lock lock = this.lock.readLock();
     lock.lock();
     try {
-      Map<String, Collection<T>> result = new HashMap<String, Collection<T>>();
+      Collection<Capability> result = new ArrayList<Capability>();
 
-      for (List<ManagementProvider<?>> managementProviders : this.managementProviders.values()) {
+
+      for (Map.Entry<Class<?>, List<ManagementProvider<?>>> entry : managementProviders.entrySet()) {
+        List<ManagementProvider<?>> managementProviders = entry.getValue();
         for (ManagementProvider<?> managementProvider : managementProviders) {
-          ManagementProvider<T> typedManagementProvider = (ManagementProvider<T>) managementProvider;
-          Set<T> capa = (Set<T>) typedManagementProvider.capabilities();
-          result.put(typedManagementProvider.getClass().getName(), capa);
+          if (managementProvider instanceof EhcacheStatisticsProvider) {
+            Set<Descriptor> descriptors = managementProvider.descriptions();
+            String name = managementProvider.getClass().getName();
+            EhcacheStatisticsProvider ehcacheStatisticsProvider = (EhcacheStatisticsProvider) managementProvider;
+            StatisticsProviderConfiguration configuration = ehcacheStatisticsProvider.getConfiguration();
+            StatisticsCapability.Properties properties = new StatisticsCapability.Properties(configuration.averageWindowDuration(),
+                configuration.averageWindowUnit(), configuration.historySize(), configuration.historyInterval(),
+                configuration.historyIntervalUnit(), configuration.timeToDisable(), configuration.timeToDisableUnit());
+
+            StatisticsCapability statisticsCapability = new StatisticsCapability(name, properties, descriptors);
+            result.add(statisticsCapability);
+          } else {
+            Set<Descriptor> descriptors = managementProvider.descriptions();
+            String name = managementProvider.getClass().getName();
+
+            ActionsCapability actionsCapability = new ActionsCapability(name, descriptors);
+            result.add(actionsCapability);
+          }
         }
       }
 
-      return result;
+      return (Collection<T>) result;
     } finally {
       lock.unlock();
     }

@@ -29,6 +29,6 @@ public interface ManagementRegistry extends Service {
 
   <T> void unregister(Class<T> managedType, T managedObject);
 
-  <T> Map<String, Collection<T>> capabilities();
+  <T> Collection<T> capabilities();
 
 }

@@ -21,7 +21,6 @@ import org.ehcache.statistics.CacheOperationOutcomes;
 import org.terracotta.context.ContextManager;
 import org.terracotta.context.TreeNode;
 import org.terracotta.context.extended.StatisticsRegistry;
-import org.terracotta.management.capabilities.Capability;
 import org.terracotta.management.capabilities.descriptors.Descriptor;
 import org.terracotta.management.capabilities.descriptors.DescriptorCategory;
 import org.terracotta.management.capabilities.descriptors.StatisticDescriptor;

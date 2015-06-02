@@ -15,7 +15,6 @@
  */
 package org.ehcache.management.providers;
 
-import org.terracotta.management.capabilities.Capability;
 import org.terracotta.management.capabilities.descriptors.Descriptor;
 
 import java.util.Set;
@@ -31,6 +30,6 @@ public interface ManagementProvider<T> {
 
   Class<T> managedType();
 
-  Set<Descriptor> capabilities();
+  Set<Descriptor> descriptions();
 
 }

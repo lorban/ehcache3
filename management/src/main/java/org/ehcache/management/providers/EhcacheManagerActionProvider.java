@@ -16,7 +16,6 @@
 package org.ehcache.management.providers;
 
 import org.ehcache.EhcacheManager;
-import org.terracotta.management.capabilities.Capability;
 import org.terracotta.management.capabilities.descriptors.Descriptor;
 
 import java.util.HashSet;
@@ -41,7 +40,7 @@ public class EhcacheManagerActionProvider implements ManagementProvider<EhcacheM
   }
 
   @Override
-  public Set<Descriptor> capabilities() {
+  public Set<Descriptor> descriptions() {
     return new HashSet<Descriptor>();
   }
 
