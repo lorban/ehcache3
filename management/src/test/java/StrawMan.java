@@ -21,10 +21,17 @@ import org.ehcache.config.CacheConfiguration;
 import org.ehcache.config.CacheConfigurationBuilder;
 import org.ehcache.config.ResourcePoolsBuilder;
 import org.ehcache.config.units.EntryUnit;
+import org.ehcache.management.ManagementRegistry;
 import org.ehcache.management.registry.DefaultManagementRegistryFactoryConfiguration;
 import org.ehcache.management.config.EhcacheStatisticsProviderConfiguration;
+import org.ehcache.spi.ServiceProvider;
+import org.ehcache.spi.service.Service;
+import org.ehcache.spi.service.ServiceConfiguration;
 import org.junit.Test;
+import org.terracotta.management.capabilities.Capability;
 
+import java.util.Collection;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -38,8 +45,10 @@ public class StrawMan {
         .withResourcePools(ResourcePoolsBuilder.newResourcePoolsBuilder().heap(10, EntryUnit.ENTRIES).build())
         .buildConfig(Long.class, String.class);
 
+    CapabilitiesCollectorService capabilitiesCollectorService = new CapabilitiesCollectorService();
     CacheManager cacheManager = CacheManagerBuilder.newCacheManagerBuilder()
         .withCache("aCache", cacheConfiguration)
+        .using(capabilitiesCollectorService)
         .using(new DefaultManagementRegistryFactoryConfiguration().addConfiguration(new EhcacheStatisticsProviderConfiguration(5 * 60, TimeUnit.SECONDS, 100, 1, TimeUnit.SECONDS, 30, TimeUnit.SECONDS)))
         .build(false);
     cacheManager.init();
@@ -48,8 +57,31 @@ public class StrawMan {
         CacheConfigurationBuilder.newCacheConfigurationBuilder().withResourcePools(ResourcePoolsBuilder.newResourcePoolsBuilder().heap(1, EntryUnit.ENTRIES))
             .buildConfig(Long.class, String.class));
 
+    Map<String, Collection<Capability>> capabilities = capabilitiesCollectorService.listManagementCapabilities();
 
     cacheManager.close();
   }
 
+  static class CapabilitiesCollectorService implements Service {
+
+    private volatile ManagementRegistry managementRegistry;
+
+    @Override
+    public void start(ServiceConfiguration<?> config, ServiceProvider serviceProvider) {
+      managementRegistry = serviceProvider.findService(ManagementRegistry.class);
+    }
+
+    @Override
+    public void stop() {
+      managementRegistry = null;
+    }
+
+    public Map<String, Collection<Capability>> listManagementCapabilities() {
+      return managementRegistry.capabilities();
+    }
+
+  }
+
+
 }
+
