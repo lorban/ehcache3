@@ -18,18 +18,9 @@ package org.ehcache.management.providers;
 import org.ehcache.Ehcache;
 import org.ehcache.management.config.StatisticsProviderConfiguration;
 import org.ehcache.util.ConcurrentWeakIdentityHashMap;
-import org.terracotta.context.ContextManager;
-import org.terracotta.context.TreeNode;
 import org.terracotta.management.capabilities.Capability;
-import org.terracotta.management.capabilities.CapabilityCategory;
-import org.terracotta.management.capabilities.StatisticCapability;
-import org.terracotta.management.stats.StatisticType;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ScheduledExecutorService;
@@ -69,62 +60,10 @@ public class EhcacheStatisticsProvider implements ManagementProvider<Ehcache> {
 
   @Override
   public Set<Capability> capabilities() {
-    return listMonitoringCapabilities();
-  }
-
-
-  private Set<Capability> listMonitoringCapabilities() {
     Set<Capability> capabilities = new HashSet<Capability>();
-
-    Collection contextObjects = this.statistics.keySet();
-    for (Object contextObject : contextObjects) {
-      TreeNode treeNode = ContextManager.nodeFor(contextObject);
-      Set<Capability> nodeCapabilities = buildMonitoringCapabilities(treeNode);
-      capabilities.addAll(nodeCapabilities);
+    for (EhcacheStatistics ehcacheStatistics : this.statistics.values()) {
+      capabilities.addAll(ehcacheStatistics.capabilities());
     }
-
-    return capabilities;
-  }
-
-  private Set<Capability> buildMonitoringCapabilities(TreeNode treeNode) {
-    Set<Capability> capabilities = new HashSet<Capability>();
-
-    Object attributesProperty = treeNode.getContext().attributes().get("properties");
-    if (attributesProperty != null && attributesProperty instanceof Map) {
-      Map<String, Object> attributes = (Map<String, Object>) attributesProperty;
-
-      Object setting = attributes.get("Setting");
-      if (setting != null) {
-        capabilities.add(new StatisticCapability(setting.toString(), StatisticType.SETTING));
-      }
-
-      Object resultObject = attributes.get("Result");
-      if (resultObject != null) {
-        String resultName = resultObject.toString();
-
-        List<Capability> statistics = new ArrayList<Capability>();
-        statistics.add(new StatisticCapability(resultName + "Count", StatisticType.SAMPLED_COUNTER));
-        statistics.add(new StatisticCapability(resultName + "Rate", StatisticType.SAMPLED_RATE));
-        statistics.add(new StatisticCapability(resultName + "LatencyMinimum", StatisticType.SAMPLED_DURATION));
-        statistics.add(new StatisticCapability(resultName + "LatencyMaximum", StatisticType.SAMPLED_DURATION));
-        statistics.add(new StatisticCapability(resultName + "LatencyAverage", StatisticType.SAMPLED_RATIO));
-
-        capabilities.add(new CapabilityCategory(resultName, statistics));
-      }
-
-      Object ratioObject = attributes.get("Ratio");
-      if (ratioObject != null) {
-        capabilities.add(new StatisticCapability(ratioObject.toString() + "Ratio", StatisticType.RATIO));
-      }
-
-    }
-
-    Set<? extends TreeNode> children = treeNode.getChildren();
-    for (TreeNode child : children) {
-      Set<Capability> childCapabilities = buildMonitoringCapabilities(child);
-      capabilities.addAll(childCapabilities);
-    }
-
     return capabilities;
   }
 
