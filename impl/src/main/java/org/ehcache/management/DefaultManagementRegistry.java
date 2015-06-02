@@ -23,7 +23,6 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -77,7 +76,7 @@ public class DefaultManagementRegistry implements ManagementRegistry {
 
   @Override
   public <T> void register(Class<T> managedType, T managedObject) {
-    Lock lock = this.lock.readLock();
+    Lock lock = this.lock.writeLock();
     lock.lock();
     try {
       List<ManagementProvider<?>> managementProviders = this.managementProviders.get(managedType);
@@ -96,7 +95,7 @@ public class DefaultManagementRegistry implements ManagementRegistry {
 
   @Override
   public <T> void unregister(Class<T> managedType, T managedObject) {
-    Lock lock = this.lock.readLock();
+    Lock lock = this.lock.writeLock();
     lock.lock();
     try {
       List<ManagementProvider<?>> managementProviders = this.managementProviders.get(managedType);
@@ -115,22 +114,23 @@ public class DefaultManagementRegistry implements ManagementRegistry {
 
   @Override
   public <T> Map<String, Collection<T>> capabilities() {
-    Map<String, Collection<T>> result = new HashMap<String, Collection<T>>();
+    Lock lock = this.lock.readLock();
+    lock.lock();
+    try {
+      Map<String, Collection<T>> result = new HashMap<String, Collection<T>>();
 
-    for (Map.Entry<Class<?>, List<ManagementProvider<?>>> entry : managementProviders.entrySet()) {
-      Set<T> capabilities = new HashSet<T>();
-
-      List<ManagementProvider<?>> managementProviders = entry.getValue();
-      for (ManagementProvider<?> managementProvider : managementProviders) {
-        ManagementProvider<T> typedManagementProvider = (ManagementProvider<T>) managementProvider;
-        Set<?> capa = typedManagementProvider.capabilities();
-        capabilities.addAll((Collection<? extends T>) capa);
+      for (List<ManagementProvider<?>> managementProviders : this.managementProviders.values()) {
+        for (ManagementProvider<?> managementProvider : managementProviders) {
+          ManagementProvider<T> typedManagementProvider = (ManagementProvider<T>) managementProvider;
+          Set<T> capa = (Set<T>) typedManagementProvider.capabilities();
+          result.put(typedManagementProvider.getClass().getName(), capa);
+        }
       }
 
-      result.put(entry.getKey().getSimpleName(), capabilities);
+      return result;
+    } finally {
+      lock.unlock();
     }
-
-    return result;
   }
 
   @Override
