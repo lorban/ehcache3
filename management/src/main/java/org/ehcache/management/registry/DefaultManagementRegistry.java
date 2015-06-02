@@ -13,8 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.ehcache.management;
+package org.ehcache.management.registry;
 
+import org.ehcache.management.ManagementRegistry;
+import org.ehcache.management.providers.ManagementProvider;
 import org.ehcache.spi.ServiceProvider;
 import org.ehcache.spi.service.ServiceConfiguration;
 import org.slf4j.Logger;
@@ -40,38 +42,19 @@ public class DefaultManagementRegistry implements ManagementRegistry {
   private final Map<Class<?>, List<ManagementProvider<?>>> managementProviders = new HashMap<Class<?>, List<ManagementProvider<?>>>();
   private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
-
-  @Override
-  public <T> void support(ManagementProvider<T> managementProvider) {
-    Lock lock = this.lock.writeLock();
-    lock.lock();
-    try {
-      List<ManagementProvider<?>> managementProviders = this.managementProviders.get(managementProvider.managedType());
-      if (managementProviders == null) {
-        managementProviders = new ArrayList<ManagementProvider<?>>();
-        this.managementProviders.put(managementProvider.managedType(), managementProviders);
-      }
-      managementProviders.add(managementProvider);
-    } finally {
-      lock.unlock();
+  DefaultManagementRegistry(ManagementProvider<?>... managementProviders) {
+    for (ManagementProvider<?> managementProvider : managementProviders) {
+      addSupportFor(managementProvider);
     }
   }
 
-  @Override
-  public <T> void unsupport(ManagementProvider<T> managementProvider) {
-    Lock lock = this.lock.writeLock();
-    lock.lock();
-    try {
-      List<ManagementProvider<?>> managementProviders = this.managementProviders.get(managementProvider.managedType());
-      if (managementProviders != null) {
-        managementProviders.remove(managementProvider);
-        if (managementProviders.isEmpty()) {
-          this.managementProviders.remove(managementProvider.managedType());
-        }
-      }
-    } finally {
-      lock.unlock();
+  void addSupportFor(ManagementProvider<?> managementProvider) {
+    List<ManagementProvider<?>> managementProviders = this.managementProviders.get(managementProvider.managedType());
+    if (managementProviders == null) {
+      managementProviders = new ArrayList<ManagementProvider<?>>();
+      this.managementProviders.put(managementProvider.managedType(), managementProviders);
     }
+    managementProviders.add(managementProvider);
   }
 
   @Override

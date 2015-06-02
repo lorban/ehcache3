@@ -15,6 +15,6 @@
  */
 
 dependencies {
-    compile project(':api'), project(':core'), project(':impl'), project(':cache-statistics')
+    compile project(':api'), project(':core'), project(':impl'), project(':management')
     compile group: 'org.terracotta', name: 'management-core', version: '5.0.0-SNAPSHOT'
 }

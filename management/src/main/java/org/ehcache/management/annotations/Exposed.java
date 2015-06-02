@@ -13,23 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.ehcache.management;
+package org.ehcache.management.annotations;
 
-import org.ehcache.spi.ServiceLocator;
-import org.ehcache.spi.service.ServiceConfiguration;
-import org.ehcache.spi.service.ServiceFactory;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  * @author Ludovic Orban
  */
-public class DefaultManagementRegistryFactory implements ServiceFactory<DefaultManagementRegistry> {
-  @Override
-  public DefaultManagementRegistry create(ServiceConfiguration<DefaultManagementRegistry> serviceConfiguration, ServiceLocator serviceLocator) {
-    return new DefaultManagementRegistry();
-  }
-
-  @Override
-  public Class<DefaultManagementRegistry> getServiceType() {
-    return DefaultManagementRegistry.class;
-  }
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+public @interface Exposed {
 }

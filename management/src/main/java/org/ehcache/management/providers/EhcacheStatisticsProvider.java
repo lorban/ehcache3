@@ -13,12 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.ehcache.management;
+package org.ehcache.management.providers;
 
 import org.ehcache.Ehcache;
-import org.ehcache.config.StatisticsProviderConfiguration;
-import org.ehcache.spi.ServiceProvider;
-import org.ehcache.spi.service.ServiceConfiguration;
+import org.ehcache.management.config.StatisticsProviderConfiguration;
 import org.ehcache.util.ConcurrentWeakIdentityHashMap;
 import org.terracotta.context.ContextManager;
 import org.terracotta.context.TreeNode;
@@ -34,7 +32,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
 /**
@@ -44,25 +41,12 @@ public class EhcacheStatisticsProvider implements ManagementProvider<Ehcache> {
 
   private final ConcurrentMap<Ehcache, EhcacheStatistics> statistics = new ConcurrentWeakIdentityHashMap<Ehcache, EhcacheStatistics>();
 
-  private volatile StatisticsProviderConfiguration configuration;
-  private volatile ScheduledExecutorService executor;
-  private volatile ManagementRegistry managementRegistry;
+  private final StatisticsProviderConfiguration configuration;
+  private final ScheduledExecutorService executor;
 
-  @Override
-  public void start(ServiceConfiguration<?> config, ServiceProvider serviceProvider) {
-    managementRegistry = serviceProvider.findService(ManagementRegistry.class);
-    managementRegistry.support(this);
-    executor = Executors.newScheduledThreadPool(1);
-    configuration = (StatisticsProviderConfiguration) config;
-  }
-
-  @Override
-  public void stop() {
-    executor.shutdownNow();
-    executor = null;
-    statistics.clear();
-    configuration = null;
-    managementRegistry.unsupport(this);
+  public EhcacheStatisticsProvider(StatisticsProviderConfiguration statisticsProviderConfiguration, ScheduledExecutorService executor) {
+    this.configuration = statisticsProviderConfiguration;
+    this.executor = executor;
   }
 
   @Override
@@ -84,7 +68,7 @@ public class EhcacheStatisticsProvider implements ManagementProvider<Ehcache> {
   }
 
   @Override
-  public Set<?> capabilities() {
+  public Set<Capability> capabilities() {
     return listMonitoringCapabilities();
   }
 

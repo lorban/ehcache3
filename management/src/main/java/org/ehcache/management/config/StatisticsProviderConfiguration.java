@@ -13,18 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.ehcache.management;
+package org.ehcache.management.config;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import org.ehcache.management.providers.ManagementProvider;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author Ludovic Orban
  */
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.PARAMETER)
-public @interface Named {
-  String value();
+public interface StatisticsProviderConfiguration<T extends ManagementProvider> {
+
+  long averageWindowDuration();
+  TimeUnit averageWindowUnit();
+
+  int historySize();
+  long historyInterval();
+  TimeUnit historyIntervalUnit();
+
+  long timeToDisable();
+  TimeUnit timeToDisableUnit();
+
+
+  Class<T> getStatisticsProviderType();
+
 }

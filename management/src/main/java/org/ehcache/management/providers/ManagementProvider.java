@@ -13,34 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.ehcache.management;
+package org.ehcache.management.providers;
 
-import org.ehcache.Ehcache;
+import org.terracotta.management.capabilities.Capability;
+
+import java.util.Set;
 
 /**
  * @author Ludovic Orban
  */
-public class EhcacheActionWrapper<K, V> {
+public interface ManagementProvider<T> {
 
-  private final Ehcache<K, V> ehcache;
+  void register(T managedObject);
 
-  public EhcacheActionWrapper(Ehcache<K, V> ehcache) {
-    this.ehcache = ehcache;
-  }
+  void unregister(T managedObject);
 
-  @Exposed
-  public void clear() {
-    ehcache.clear();
-  }
+  Class<T> managedType();
 
-  @Exposed
-  public V get(@Named("key") K key) {
-    return ehcache.get(key);
-  }
-
-  @Exposed
-  public void put(@Named("key") K key, @Named("value") V value) {
-    ehcache.put(key, value);
-  }
+  Set<Capability> capabilities();
 
 }

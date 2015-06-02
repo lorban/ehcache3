@@ -13,24 +13,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.ehcache.management;
+package org.ehcache.management.providers;
 
-import org.ehcache.spi.service.Service;
+import org.ehcache.EhcacheManager;
+import org.terracotta.management.capabilities.Capability;
 
-import java.util.Collection;
+import java.util.HashSet;
 import java.util.Set;
 
 /**
  * @author Ludovic Orban
  */
-public interface ManagementProvider<T> extends Service {
+public class EhcacheManagerActionProvider implements ManagementProvider<EhcacheManager> {
 
-  void register(T managedObject);
+  @Override
+  public void register(EhcacheManager ehcacheManager) {
+  }
 
-  void unregister(T managedObject);
+  @Override
+  public void unregister(EhcacheManager ehcacheManager) {
+  }
 
-  Class<T> managedType();
+  @Override
+  public Class<EhcacheManager> managedType() {
+    return EhcacheManager.class;
+  }
 
-  Set<?> capabilities();
+  @Override
+  public Set<Capability> capabilities() {
+    return new HashSet<Capability>();
+  }
 
 }

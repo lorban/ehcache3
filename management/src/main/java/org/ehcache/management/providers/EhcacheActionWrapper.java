@@ -13,22 +13,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.ehcache.management;
+package org.ehcache.management.providers;
 
-import org.ehcache.spi.service.Service;
-
-import java.util.Collection;
-import java.util.Map;
+import org.ehcache.Ehcache;
+import org.ehcache.management.annotations.Exposed;
+import org.ehcache.management.annotations.Named;
 
 /**
  * @author Ludovic Orban
  */
-public interface ManagementRegistry extends Service {
+public class EhcacheActionWrapper<K, V> {
 
-  <T> void register(Class<T> managedType, T managedObject);
+  private final Ehcache<K, V> ehcache;
 
-  <T> void unregister(Class<T> managedType, T managedObject);
+  public EhcacheActionWrapper(Ehcache<K, V> ehcache) {
+    this.ehcache = ehcache;
+  }
 
-  <T> Map<String, Collection<T>> capabilities();
+  @Exposed
+  public void clear() {
+    ehcache.clear();
+  }
+
+  @Exposed
+  public V get(@Named("key") K key) {
+    return ehcache.get(key);
+  }
+
+  @Exposed
+  public void put(@Named("key") K key, @Named("value") V value) {
+    ehcache.put(key, value);
+  }
 
 }

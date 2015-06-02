@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.ehcache.management;
+package org.ehcache.management.providers;
 
 import org.ehcache.Ehcache;
-import org.ehcache.spi.ServiceProvider;
-import org.ehcache.spi.service.ServiceConfiguration;
+import org.ehcache.management.annotations.Exposed;
+import org.ehcache.management.annotations.Named;
 import org.ehcache.util.ConcurrentWeakIdentityHashMap;
 import org.terracotta.management.capabilities.CallCapability;
 import org.terracotta.management.capabilities.Capability;
@@ -37,19 +37,6 @@ import java.util.concurrent.ConcurrentMap;
 public class EhcacheActionProvider implements ManagementProvider<Ehcache<?, ?>> {
 
   private final ConcurrentMap<Ehcache, EhcacheActionWrapper> actions = new ConcurrentWeakIdentityHashMap<Ehcache, EhcacheActionWrapper>();
-  private volatile ManagementRegistry managementRegistry;
-
-  @Override
-  public void start(ServiceConfiguration<?> config, ServiceProvider serviceProvider) {
-    managementRegistry = serviceProvider.findService(ManagementRegistry.class);
-    managementRegistry.support(this);
-  }
-
-  @Override
-  public void stop() {
-    managementRegistry.unsupport(this);
-    actions.clear();
-  }
 
   @Override
   public void register(Ehcache<?, ?> ehcache) {
@@ -67,7 +54,7 @@ public class EhcacheActionProvider implements ManagementProvider<Ehcache<?, ?>> 
   }
 
   @Override
-  public Set<?> capabilities() {
+  public Set<Capability> capabilities() {
     return listManagementCapabilities();
   }
 
@@ -115,7 +102,7 @@ public class EhcacheActionProvider implements ManagementProvider<Ehcache<?, ?>> 
         }
 
         List<CallCapability.Parameter> parameters = new ArrayList<CallCapability.Parameter>();
-        for (int i=0;i<parameterTypes.length;i++) {
+        for (int i = 0; i < parameterTypes.length; i++) {
           parameters.add(new CallCapability.Parameter(parameterNames.get(i), parameterTypes[i].getName()));
         }
 

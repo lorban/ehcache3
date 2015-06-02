@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.ehcache.management;
+package org.ehcache.management.providers;
 
 import org.ehcache.Ehcache;
-import org.ehcache.config.StatisticsProviderConfiguration;
+import org.ehcache.management.config.StatisticsProviderConfiguration;
 import org.ehcache.statistics.CacheOperationOutcomes;
 import org.terracotta.context.ContextManager;
 import org.terracotta.context.TreeNode;
