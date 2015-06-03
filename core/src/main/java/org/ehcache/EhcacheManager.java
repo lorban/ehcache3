@@ -46,12 +46,15 @@ import org.terracotta.statistics.StatisticsManager;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Deque;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -60,7 +63,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 /**
  * @author Alex Snaps
  */
-@ContextAttribute("this")
 public class EhcacheManager implements PersistentCacheManager {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(EhcacheManager.class);
@@ -318,12 +320,17 @@ public class EhcacheManager implements PersistentCacheManager {
     RuntimeConfiguration<K, V> runtimeConfiguration = new RuntimeConfiguration<K, V>(config, evtService);
     runtimeConfiguration.addCacheConfigurationListener(store.getConfigurationChangeListeners());
     final Ehcache<K, V> ehCache = new Ehcache<K, V>(runtimeConfiguration, store, decorator, evtService,
-        useLoaderInAtomics, alias, LoggerFactory.getLogger(Ehcache.class + "-" + alias));
+        useLoaderInAtomics, LoggerFactory.getLogger(Ehcache.class + "-" + alias));
 
     lifeCycledList.add(new LifeCycled() {
       @Override
       public void init() throws Exception {
         StatisticsManager.associate(ehCache).withParent(EhcacheManager.this);
+
+        Map<String, Object> properties = new HashMap<String, Object>();
+        properties.put("Setting", "CacheName");
+
+        StatisticsManager.associate(new EhcacheStatsSettings(alias, properties)).withParent(ehCache);
         if (managementRegistry != null) {
           managementRegistry.register(Ehcache.class, ehCache);
         }
@@ -585,4 +592,16 @@ public class EhcacheManager implements PersistentCacheManager {
       notifyAll();
     }
   }
+
+  private static final class EhcacheStatsSettings {
+    @ContextAttribute("CacheName")  private final String alias;
+    @ContextAttribute("properties") private final Map<String, Object> properties;
+    @ContextAttribute("tags") private final Set<String> tags = new HashSet<String>(Arrays.asList("cache", "exposed"));
+
+    EhcacheStatsSettings(String alias, Map<String, Object> properties) {
+      this.alias = alias;
+      this.properties = properties;
+    }
+  }
+
 }

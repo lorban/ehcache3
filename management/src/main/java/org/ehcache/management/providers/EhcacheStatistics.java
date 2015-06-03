@@ -20,13 +20,18 @@ import org.ehcache.management.config.StatisticsProviderConfiguration;
 import org.ehcache.statistics.CacheOperationOutcomes;
 import org.terracotta.context.ContextManager;
 import org.terracotta.context.TreeNode;
+import org.terracotta.context.extended.ExposedStatistic;
 import org.terracotta.context.extended.StatisticsRegistry;
+import org.terracotta.context.query.Matcher;
+import org.terracotta.context.query.Query;
 import org.terracotta.management.capabilities.descriptors.Descriptor;
-import org.terracotta.management.capabilities.descriptors.DescriptorCategory;
 import org.terracotta.management.capabilities.descriptors.StatisticDescriptor;
+import org.terracotta.management.capabilities.descriptors.StatisticDescriptorCategory;
 import org.terracotta.management.stats.StatisticType;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashSet;
@@ -34,6 +39,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
+
+import static org.terracotta.context.query.Matchers.attributes;
+import static org.terracotta.context.query.Matchers.context;
+import static org.terracotta.context.query.Matchers.hasAttribute;
+import static org.terracotta.context.query.QueryBuilder.queryBuilder;
 
 /**
  * @author Ludovic Orban
@@ -48,31 +58,75 @@ public class EhcacheStatistics {
   private static final Set<CacheOperationOutcomes.GetOutcome> GET_NO_LOADER_OUTCOMES = EnumSet.of(CacheOperationOutcomes.GetOutcome.HIT_NO_LOADER, CacheOperationOutcomes.GetOutcome.MISS_NO_LOADER);
   private static final Set<CacheOperationOutcomes.CacheLoadingOutcome> ALL_CACHE_LOADER_OUTCOMES = EnumSet.allOf(CacheOperationOutcomes.CacheLoadingOutcome.class);
 
-  private final StatisticsRegistry statisticsContainer;
+  private final StatisticsRegistry statisticsRegistry;
   private final Ehcache<?, ?> contextObject;
 
   EhcacheStatistics(Ehcache<?, ?> contextObject, StatisticsProviderConfiguration configuration, ScheduledExecutorService executor) {
     this.contextObject = contextObject;
-    this.statisticsContainer = new StatisticsRegistry(StandardOperationStatistic.class, contextObject, executor, configuration.averageWindowDuration(),
+    this.statisticsRegistry = new StatisticsRegistry(StandardOperationStatistic.class, contextObject, executor, configuration.averageWindowDuration(),
         configuration.averageWindowUnit(), configuration.historySize(), configuration.historyInterval(), configuration.historyIntervalUnit(),
         configuration.timeToDisable(), configuration.timeToDisableUnit());
 
-    statisticsContainer.registerCompoundOperation(StandardOperationStatistic.CACHE_GET, ALL_CACHE_GET_OUTCOMES, Collections.<String, Object>singletonMap("Result", "AllCacheGet"));
-    statisticsContainer.registerCompoundOperation(StandardOperationStatistic.CACHE_GET, ALL_CACHE_MISS_OUTCOMES, Collections.<String, Object>singletonMap("Result", "AllCacheMiss"));
-    statisticsContainer.registerCompoundOperation(StandardOperationStatistic.CACHE_PUT, ALL_CACHE_PUT_OUTCOMES, Collections.<String, Object>singletonMap("Result", "AllCachePut"));
-    statisticsContainer.registerCompoundOperation(StandardOperationStatistic.CACHE_REMOVE, ALL_CACHE_REMOVE_OUTCOMES, Collections.<String, Object>singletonMap("Result", "AllCacheRemove"));
-    statisticsContainer.registerCompoundOperation(StandardOperationStatistic.CACHE_GET, GET_WITH_LOADER_OUTCOMES, Collections.<String, Object>singletonMap("Result", "GetWithLoader"));
-    statisticsContainer.registerCompoundOperation(StandardOperationStatistic.CACHE_GET, GET_NO_LOADER_OUTCOMES, Collections.<String, Object>singletonMap("Result", "GetNoLoader"));
-    statisticsContainer.registerCompoundOperation(StandardOperationStatistic.CACHE_LOADING, ALL_CACHE_LOADER_OUTCOMES, Collections.<String, Object>singletonMap("Result", "AllCacheLoader"));
-    statisticsContainer.registerRatio(StandardOperationStatistic.CACHE_GET, EnumSet.of(CacheOperationOutcomes.GetOutcome.HIT_NO_LOADER), ALL_CACHE_GET_OUTCOMES, Collections.<String, Object>singletonMap("Ratio", "Hit"));
+    statisticsRegistry.registerCompoundOperation("AllCacheGet", Collections.singleton("cache"), Collections.<String, Object>singletonMap("type", "Result"), StandardOperationStatistic.CACHE_GET, ALL_CACHE_GET_OUTCOMES);
+    statisticsRegistry.registerCompoundOperation("AllCacheMiss", Collections.singleton("cache"), Collections.<String, Object>singletonMap("type", "Result"), StandardOperationStatistic.CACHE_GET, ALL_CACHE_MISS_OUTCOMES);
+    statisticsRegistry.registerCompoundOperation("AllCachePut", Collections.singleton("cache"), Collections.<String, Object>singletonMap("type", "Result"), StandardOperationStatistic.CACHE_PUT, ALL_CACHE_PUT_OUTCOMES);
+    statisticsRegistry.registerCompoundOperation("AllCacheRemove", Collections.singleton("cache"), Collections.<String, Object>singletonMap("type", "Result"), StandardOperationStatistic.CACHE_REMOVE, ALL_CACHE_REMOVE_OUTCOMES);
+    statisticsRegistry.registerCompoundOperation("GetWithLoader", Collections.singleton("cache"), Collections.<String, Object>singletonMap("type", "Result"), StandardOperationStatistic.CACHE_GET, GET_WITH_LOADER_OUTCOMES);
+    statisticsRegistry.registerCompoundOperation("GetNoLoader", Collections.singleton("cache"), Collections.<String, Object>singletonMap("type", "Result"), StandardOperationStatistic.CACHE_GET, GET_NO_LOADER_OUTCOMES);
+    statisticsRegistry.registerCompoundOperation("AllCacheLoader", Collections.singleton("cache"), Collections.<String, Object>singletonMap("type", "Result"), StandardOperationStatistic.CACHE_LOADING, ALL_CACHE_LOADER_OUTCOMES);
+    statisticsRegistry.registerRatio("Hit", Collections.singleton("cache"), Collections.<String, Object>singletonMap("type", "Ratio"), StandardOperationStatistic.CACHE_GET, EnumSet.of(CacheOperationOutcomes.GetOutcome.HIT_NO_LOADER), ALL_CACHE_GET_OUTCOMES);
   }
 
   public Set<Descriptor> capabilities() {
     Set<Descriptor> capabilities = new HashSet<Descriptor>();
 
-    TreeNode treeNode = ContextManager.nodeFor(contextObject);
-    Set<Descriptor> nodeCapabilities = buildCapabilities(treeNode);
-    capabilities.addAll(nodeCapabilities);
+    capabilities.addAll(searchContextTreeForSettings());
+    capabilities.addAll(queryStatisticsRegistry());
+
+    return capabilities;
+  }
+
+  private Set<Descriptor> queryStatisticsRegistry() {
+    Set<Descriptor> capabilities = new HashSet<Descriptor>();
+
+    Collection<ExposedStatistic> registrations = statisticsRegistry.getRegistrations();
+    for (ExposedStatistic registration : registrations) {
+      String name = registration.getName();
+      Object type = registration.getProperties().get("type");
+      if ("Result".equals(type)) {
+        List<StatisticDescriptor> statistics = new ArrayList<StatisticDescriptor>();
+        statistics.add(new StatisticDescriptor(name + "Count", StatisticType.SAMPLED_COUNTER));
+        statistics.add(new StatisticDescriptor(name + "Rate", StatisticType.SAMPLED_RATE));
+        statistics.add(new StatisticDescriptor(name + "LatencyMinimum", StatisticType.SAMPLED_DURATION));
+        statistics.add(new StatisticDescriptor(name + "LatencyMaximum", StatisticType.SAMPLED_DURATION));
+        statistics.add(new StatisticDescriptor(name + "LatencyAverage", StatisticType.SAMPLED_RATIO));
+
+        capabilities.add(new StatisticDescriptorCategory(name, statistics));
+      } else if ("Ratio".equals(type)) {
+        capabilities.add(new StatisticDescriptor(name + "Ratio", StatisticType.RATIO));
+      }
+    }
+
+    return capabilities;
+  }
+
+  private Set<Descriptor> searchContextTreeForSettings() {
+    Set<Descriptor> capabilities = new HashSet<Descriptor>();
+
+    Query q = queryBuilder()
+        .children()
+        .filter(context(attributes(hasAttribute("tags", new Matcher<Set<String>>() {
+          @Override
+          protected boolean matchesSafely(Set<String> object) {
+            return object.containsAll(Arrays.asList("cache", "exposed"));
+          }
+        }))))
+        .build();
+
+    Set<TreeNode> queryResult = q.execute(Collections.singleton(ContextManager.nodeFor(contextObject)));
+    for (TreeNode treeNode : queryResult) {
+      capabilities.addAll(buildCapabilities(treeNode));
+    }
 
     return capabilities;
   }
@@ -88,38 +142,12 @@ public class EhcacheStatistics {
       if (setting != null) {
         capabilities.add(new StatisticDescriptor(setting.toString(), StatisticType.SETTING));
       }
-
-      Object resultObject = attributes.get("Result");
-      if (resultObject != null) {
-        String resultName = resultObject.toString();
-
-        List<Descriptor> statistics = new ArrayList<Descriptor>();
-        statistics.add(new StatisticDescriptor(resultName + "Count", StatisticType.SAMPLED_COUNTER));
-        statistics.add(new StatisticDescriptor(resultName + "Rate", StatisticType.SAMPLED_RATE));
-        statistics.add(new StatisticDescriptor(resultName + "LatencyMinimum", StatisticType.SAMPLED_DURATION));
-        statistics.add(new StatisticDescriptor(resultName + "LatencyMaximum", StatisticType.SAMPLED_DURATION));
-        statistics.add(new StatisticDescriptor(resultName + "LatencyAverage", StatisticType.SAMPLED_RATIO));
-
-        capabilities.add(new DescriptorCategory(resultName, statistics));
-      }
-
-      Object ratioObject = attributes.get("Ratio");
-      if (ratioObject != null) {
-        capabilities.add(new StatisticDescriptor(ratioObject.toString() + "Ratio", StatisticType.RATIO));
-      }
-
-    }
-
-    Set<? extends TreeNode> children = treeNode.getChildren();
-    for (TreeNode child : children) {
-      Set<Descriptor> childCapabilities = buildCapabilities(child);
-      capabilities.addAll(childCapabilities);
     }
 
     return capabilities;
   }
 
   public void dispose() {
-    statisticsContainer.clearRegistrations();
+    statisticsRegistry.clearRegistrations();
   }
 }

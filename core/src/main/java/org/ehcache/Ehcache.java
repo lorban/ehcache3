@@ -47,7 +47,6 @@ import org.ehcache.statistics.CacheOperationOutcomes.PutOutcome;
 import org.ehcache.statistics.CacheOperationOutcomes.RemoveOutcome;
 import org.ehcache.statistics.CacheOperationOutcomes.ReplaceOutcome;
 import org.slf4j.Logger;
-import org.terracotta.context.annotations.ContextAttribute;
 import org.terracotta.statistics.StatisticsManager;
 import org.terracotta.statistics.observer.OperationObserver;
 
@@ -79,13 +78,11 @@ import static org.terracotta.statistics.StatisticBuilder.operation;
 /**
  * @author Alex Snaps
  */
-@ContextAttribute("this")
 public class Ehcache<K, V> implements Cache<K, V>, UserManagedCache<K, V>, PersistentUserManagedCache<K, V> {
 
   private final StatusTransitioner statusTransitioner;
 
   private final Store<K, V> store;
-  private final String alias;
   private final CacheLoaderWriter<? super K, V> cacheLoaderWriter;
   private final ResilienceStrategy<K, V> resilienceStrategy;
   private final RuntimeConfiguration<K, V> runtimeConfiguration;
@@ -93,14 +90,14 @@ public class Ehcache<K, V> implements Cache<K, V>, UserManagedCache<K, V>, Persi
   private final Jsr107CacheImpl jsr107Cache;
   private final boolean useLoaderInAtomics;
   private final Logger logger;
-  
+
   private final OperationObserver<GetOutcome> getObserver = operation(GetOutcome.class).named("get").of(this).tag("cache").build();
   private final OperationObserver<PutOutcome> putObserver = operation(PutOutcome.class).named("put").of(this).tag("cache").build();
   private final OperationObserver<RemoveOutcome> removeObserver = operation(RemoveOutcome.class).named("remove").of(this).tag("cache").build();
   private final OperationObserver<ConditionalRemoveOutcome> conditionalRemoveObserver = operation(ConditionalRemoveOutcome.class).named("conditionalRemove").of(this).tag("cache").build();
   private final OperationObserver<CacheLoadingOutcome> cacheLoadingObserver = operation(CacheLoadingOutcome.class).named("cacheLoading").of(this).tag("cache").build();
   private final OperationObserver<PutIfAbsentOutcome> putIfAbsentObserver = operation(PutIfAbsentOutcome.class).named("putIfAbsent").of(this).tag("cache").build();
-  private final OperationObserver<ReplaceOutcome> replaceObserver = operation(ReplaceOutcome.class).named("replace").of(this).tag("cache").build();  
+  private final OperationObserver<ReplaceOutcome> replaceObserver = operation(ReplaceOutcome.class).named("replace").of(this).tag("cache").build();
   private final ConcurrentMap<BulkOps, AtomicLong> bulkMethodEntries = new ConcurrentHashMap<BulkOps, AtomicLong>();
 
   private static final NullaryFunction<Boolean> REPLACE_FALSE = new NullaryFunction<Boolean>() {
@@ -122,14 +119,13 @@ public class Ehcache<K, V> implements Cache<K, V>, UserManagedCache<K, V>, Persi
       final CacheLoaderWriter<? super K, V> cacheLoaderWriter, 
       CacheEventNotificationService<K, V> eventNotifier,
       Logger logger) {
-    this(runtimeConfiguration, store, cacheLoaderWriter, eventNotifier, true, null, logger);
+    this(runtimeConfiguration, store, cacheLoaderWriter, eventNotifier, true, logger);
   }
 
   Ehcache(RuntimeConfiguration<K, V> runtimeConfiguration, Store<K, V> store,
           CacheLoaderWriter<? super K, V> cacheLoaderWriter,
-          CacheEventNotificationService<K, V> eventNotifier, boolean useLoaderInAtomics, String alias, Logger logger) {
+          CacheEventNotificationService<K, V> eventNotifier, boolean useLoaderInAtomics, Logger logger) {
     this.store = store;
-    this.alias = alias;
     StatisticsManager.associate(store).withParent(this);
     this.cacheLoaderWriter = cacheLoaderWriter;
     if (store instanceof RecoveryCache) {
@@ -149,18 +145,6 @@ public class Ehcache<K, V> implements Cache<K, V>, UserManagedCache<K, V>, Persi
     this.useLoaderInAtomics = useLoaderInAtomics;
     this.logger = logger;
     this.statusTransitioner = new StatusTransitioner(logger);
-  }
-
-  @ContextAttribute("CacheName")
-  public String getAlias() {
-    return alias;
-  }
-
-  @ContextAttribute("properties")
-  public Map<String, Object> getProperties() {
-    Map<String, Object> result = new HashMap<String, Object>();
-    result.put("Setting", "CacheName");
-    return result;
   }
 
   @SuppressWarnings("unchecked")
