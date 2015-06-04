@@ -16,108 +16,28 @@
 package org.ehcache.management.providers;
 
 import org.ehcache.Ehcache;
-import org.ehcache.management.annotations.Exposed;
-import org.ehcache.management.annotations.Named;
-import org.ehcache.util.ConcurrentWeakIdentityHashMap;
 import org.terracotta.management.capabilities.context.Context;
-import org.terracotta.management.capabilities.descriptors.CallDescriptor;
-import org.terracotta.management.capabilities.descriptors.Descriptor;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.ConcurrentMap;
 
 /**
  * @author Ludovic Orban
  */
-public class EhcacheActionProvider implements ManagementProvider<Ehcache<?, ?>> {
-
-  private final ConcurrentMap<Ehcache, EhcacheActionWrapper> actions = new ConcurrentWeakIdentityHashMap<Ehcache, EhcacheActionWrapper>();
+public class EhcacheActionProvider extends AbstractActionProvider<Ehcache, EhcacheActionWrapper> {
 
   @Override
-  public void register(Ehcache<?, ?> ehcache) {
-    actions.putIfAbsent(ehcache, new EhcacheActionWrapper(ehcache));
+  public Class<Ehcache> managedType() {
+    return Ehcache.class;
   }
 
   @Override
-  public void unregister(Ehcache<?, ?> ehcache) {
-    actions.remove(ehcache);
-  }
-
-  @Override
-  public Class<Ehcache<?, ?>> managedType() {
-    return (Class) Ehcache.class;
-  }
-
-  @Override
-  public Set<Descriptor> descriptions() {
-    return listManagementCapabilities();
+  protected EhcacheActionWrapper createActionWrapper(Ehcache ehcache) {
+    return new EhcacheActionWrapper(ehcache);
   }
 
   @Override
   public Context context() {
     return new Context(Arrays.asList(new Context.Attribute("cacheManagerName", true), new Context.Attribute("cacheName", true)));
-  }
-
-  private Set<Descriptor> listManagementCapabilities() {
-    Set<Descriptor> capabilities = new HashSet<Descriptor>();
-
-    Collection actions = this.actions.values();
-    for (Object action : actions) {
-      Class<?> actionClass = action.getClass();
-      Method[] methods = actionClass.getMethods();
-
-      for (Method method : methods) {
-        Annotation[] declaredAnnotations = method.getDeclaredAnnotations();
-        boolean expose = false;
-        for (Annotation declaredAnnotation : declaredAnnotations) {
-          if (declaredAnnotation.annotationType() == Exposed.class) {
-            expose = true;
-            break;
-          }
-        }
-        if (!expose) {
-          continue;
-        }
-
-        String methodName = method.getName();
-        Class<?> returnType = method.getReturnType();
-
-        Class<?>[] parameterTypes = method.getParameterTypes();
-        List<String> parameterNames = new ArrayList<String>();
-
-        for (int i = 0; i < parameterTypes.length; i++) {
-          Annotation[] parameterAnnotations = method.getParameterAnnotations()[i];
-          boolean named = false;
-          for (Annotation parameterAnnotation : parameterAnnotations) {
-            if (parameterAnnotation instanceof Named) {
-              Named namedAnnotation = (Named) parameterAnnotation;
-              parameterNames.add(namedAnnotation.value());
-              named = true;
-              break;
-            }
-          }
-          if (!named) {
-            parameterNames.add("arg" + i);
-          }
-        }
-
-        List<CallDescriptor.Parameter> parameters = new ArrayList<CallDescriptor.Parameter>();
-        for (int i = 0; i < parameterTypes.length; i++) {
-          parameters.add(new CallDescriptor.Parameter(parameterNames.get(i), parameterTypes[i].getName()));
-        }
-
-        capabilities.add(new CallDescriptor(methodName, returnType.getName(), parameters));
-      }
-    }
-
-    return capabilities;
   }
 
 }

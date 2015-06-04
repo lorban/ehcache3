@@ -22,11 +22,11 @@ import org.ehcache.management.annotations.Named;
 /**
  * @author Ludovic Orban
  */
-public class EhcacheActionWrapper<K, V> {
+public class EhcacheActionWrapper {
 
-  private final Ehcache<K, V> ehcache;
+  private final Ehcache ehcache;
 
-  public EhcacheActionWrapper(Ehcache<K, V> ehcache) {
+  public EhcacheActionWrapper(Ehcache ehcache) {
     this.ehcache = ehcache;
   }
 
@@ -36,17 +36,17 @@ public class EhcacheActionWrapper<K, V> {
   }
 
   @Exposed
-  public V get(@Named("key") K key) {
+  public Object get(@Named("key") Object key) {
     return ehcache.get(key);
   }
 
   @Exposed
-  public void remove(@Named("key") K key) {
+  public void remove(@Named("key") Object key) {
     ehcache.remove(key);
   }
 
   @Exposed
-  public void put(@Named("key") K key, @Named("value") V value) {
+  public void put(@Named("key") Object key, @Named("value") Object value) {
     ehcache.put(key, value);
   }
 
