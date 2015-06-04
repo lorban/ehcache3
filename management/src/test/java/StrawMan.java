@@ -29,8 +29,10 @@ import org.ehcache.spi.service.Service;
 import org.ehcache.spi.service.ServiceConfiguration;
 import org.junit.Test;
 import org.terracotta.management.capabilities.Capability;
+import org.terracotta.management.stats.Statistic;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -78,6 +80,13 @@ public class StrawMan {
     }
 
     public <T> Collection<T> listManagementCapabilities() {
+      HashMap<String, String> context = new HashMap<String, String>() {{
+        put("cacheName", "aCache");
+      }};
+
+      Collection<Statistic<?>> result = managementRegistry.collectStatistics(context, "org.ehcache.management.providers.EhcacheStatisticsProvider", "HitRatio", "CacheName", "AllCacheGetRate");
+
+
       return managementRegistry.capabilities();
     }
 

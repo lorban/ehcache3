@@ -16,14 +16,14 @@
 package org.ehcache.management.providers;
 
 import org.ehcache.EhcacheManager;
-import org.terracotta.management.capabilities.context.Context;
+import org.terracotta.management.capabilities.context.CapabilityContext;
 
 import java.util.Collections;
 
 /**
  * @author Ludovic Orban
  */
-public class ContextProvider extends AbstractActionProvider<EhcacheManager, EhcacheManagerContext> {
+public class CapabilityContextProvider extends AbstractActionProvider<EhcacheManager, EhcacheManagerContext> {
 
   @Override
   protected EhcacheManagerContext createActionWrapper(EhcacheManager ehcacheManager) {
@@ -36,8 +36,8 @@ public class ContextProvider extends AbstractActionProvider<EhcacheManager, Ehca
   }
 
   @Override
-  public Context context() {
-    return new Context(Collections.<Context.Attribute>emptySet());
+  public CapabilityContext capabilityContext() {
+    return new CapabilityContext(Collections.<CapabilityContext.Attribute>emptySet());
   }
 
 }

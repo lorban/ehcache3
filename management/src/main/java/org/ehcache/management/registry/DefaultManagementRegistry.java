@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 import org.terracotta.management.capabilities.ActionsCapability;
 import org.terracotta.management.capabilities.Capability;
 import org.terracotta.management.capabilities.StatisticsCapability;
-import org.terracotta.management.capabilities.context.Context;
+import org.terracotta.management.capabilities.context.CapabilityContext;
 import org.terracotta.management.capabilities.descriptors.Descriptor;
 
 import java.util.ArrayList;
@@ -61,6 +61,18 @@ public class DefaultManagementRegistry implements ManagementRegistry {
   @Override
   public void sendEvent(Object event) {
     eventProvider.sendEvent(event);
+  }
+
+  @Override
+  public <T> Collection<T> collectStatistics(Map<String, String> context, String capabilityName, String... statisticNames) {
+    for (List<ManagementProvider<?>> providers : managementProviders.values()) {
+      for (ManagementProvider<?> provider : providers) {
+        if (provider.getClass().getName().equals(capabilityName)) {
+          return (Collection<T>) provider.collectStatistics(context, statisticNames);
+        }
+      }
+    }
+    throw new IllegalArgumentException("No such capability registered : " + capabilityName);
   }
 
   void addSupportFor(ManagementProvider<?> managementProvider) {
@@ -124,7 +136,7 @@ public class DefaultManagementRegistry implements ManagementRegistry {
           if (managementProvider instanceof EhcacheStatisticsProvider) {
             Set<Descriptor> descriptors = managementProvider.descriptions();
             String name = managementProvider.getClass().getName();
-            Context context = managementProvider.context();
+            CapabilityContext context = managementProvider.capabilityContext();
             EhcacheStatisticsProvider ehcacheStatisticsProvider = (EhcacheStatisticsProvider) managementProvider;
             StatisticsProviderConfiguration configuration = ehcacheStatisticsProvider.getConfiguration();
             StatisticsCapability.Properties properties = new StatisticsCapability.Properties(configuration.averageWindowDuration(),
@@ -136,7 +148,7 @@ public class DefaultManagementRegistry implements ManagementRegistry {
           } else {
             Set<Descriptor> descriptors = managementProvider.descriptions();
             String name = managementProvider.getClass().getName();
-            Context context = managementProvider.context();
+            CapabilityContext context = managementProvider.capabilityContext();
 
             ActionsCapability actionsCapability = new ActionsCapability(name, descriptors, context);
             result.add(actionsCapability);

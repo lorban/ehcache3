@@ -18,11 +18,15 @@ package org.ehcache.management.providers;
 import org.ehcache.Ehcache;
 import org.ehcache.management.config.StatisticsProviderConfiguration;
 import org.ehcache.util.ConcurrentWeakIdentityHashMap;
-import org.terracotta.management.capabilities.context.Context;
+import org.terracotta.management.capabilities.context.CapabilityContext;
 import org.terracotta.management.capabilities.descriptors.Descriptor;
+import org.terracotta.management.stats.Statistic;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ScheduledExecutorService;
@@ -74,8 +78,31 @@ public class EhcacheStatisticsProvider implements ManagementProvider<Ehcache> {
   }
 
   @Override
-  public Context context() {
-    return new Context(Arrays.asList(new Context.Attribute("cacheManagerName", true), new Context.Attribute("cacheName", false)));
+  public CapabilityContext capabilityContext() {
+    return new CapabilityContext(Arrays.asList(new CapabilityContext.Attribute("cacheManagerName", true), new CapabilityContext.Attribute("cacheName", false)));
+  }
+
+  @Override
+  public Collection<Statistic<?>> collectStatistics(Map<String, String> context, String... statisticNames) {
+    String cacheName = context.get("cacheName");
+    if (cacheName == null) {
+      throw new IllegalArgumentException("Missing cache name from context");
+    }
+
+    for (EhcacheStatistics ehcacheStatistics : statistics.values()) {
+      if (ehcacheStatistics.getCacheName().equals(cacheName)) {
+        Collection<Statistic<?>> result = new ArrayList<Statistic<?>>();
+
+        for (String statisticName : statisticNames) {
+          Statistic<?> statistic = ehcacheStatistics.queryStatistic(statisticName);
+          result.add(statistic);
+        }
+
+        return result;
+      }
+    }
+
+    throw new IllegalArgumentException("No such cache name : " + cacheName);
   }
 
 }

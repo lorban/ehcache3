@@ -16,25 +16,14 @@
 package org.ehcache.management.providers;
 
 import org.ehcache.EhcacheManager;
-import org.terracotta.management.capabilities.context.Context;
-import org.terracotta.management.capabilities.descriptors.Descriptor;
+import org.terracotta.management.capabilities.context.CapabilityContext;
 
 import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * @author Ludovic Orban
  */
-public class EhcacheManagerActionProvider implements ManagementProvider<EhcacheManager> {
-
-  @Override
-  public void register(EhcacheManager ehcacheManager) {
-  }
-
-  @Override
-  public void unregister(EhcacheManager ehcacheManager) {
-  }
+public class EhcacheManagerActionProvider extends AbstractActionProvider<EhcacheManager, Object> {
 
   @Override
   public Class<EhcacheManager> managedType() {
@@ -42,13 +31,12 @@ public class EhcacheManagerActionProvider implements ManagementProvider<EhcacheM
   }
 
   @Override
-  public Set<Descriptor> descriptions() {
-    return new HashSet<Descriptor>();
+  public CapabilityContext capabilityContext() {
+    return new CapabilityContext(Collections.singletonList(new CapabilityContext.Attribute("cacheManagerName", true)));
   }
 
   @Override
-  public Context context() {
-    return new Context(Collections.singletonList(new Context.Attribute("cacheManagerName", true)));
+  protected Object createActionWrapper(EhcacheManager contextObject) {
+    return new Object();
   }
-
 }

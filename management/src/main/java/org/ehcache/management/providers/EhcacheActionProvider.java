@@ -16,7 +16,7 @@
 package org.ehcache.management.providers;
 
 import org.ehcache.Ehcache;
-import org.terracotta.management.capabilities.context.Context;
+import org.terracotta.management.capabilities.context.CapabilityContext;
 
 import java.util.Arrays;
 
@@ -36,8 +36,8 @@ public class EhcacheActionProvider extends AbstractActionProvider<Ehcache, Ehcac
   }
 
   @Override
-  public Context context() {
-    return new Context(Arrays.asList(new Context.Attribute("cacheManagerName", true), new Context.Attribute("cacheName", true)));
+  public CapabilityContext capabilityContext() {
+    return new CapabilityContext(Arrays.asList(new CapabilityContext.Attribute("cacheManagerName", true), new CapabilityContext.Attribute("cacheName", true)));
   }
 
 }

@@ -17,7 +17,7 @@ package org.ehcache.management.registry;
 
 import org.ehcache.management.config.EhcacheStatisticsProviderConfiguration;
 import org.ehcache.management.config.StatisticsProviderConfiguration;
-import org.ehcache.management.providers.ContextProvider;
+import org.ehcache.management.providers.CapabilityContextProvider;
 import org.ehcache.management.providers.EhcacheActionProvider;
 import org.ehcache.management.providers.EhcacheManagerActionProvider;
 import org.ehcache.management.providers.EhcacheStatisticsProvider;
@@ -56,9 +56,9 @@ public class DefaultManagementRegistryFactory implements ServiceFactory<DefaultM
 
     EhcacheStatisticsProvider ehcacheStatisticsProvider = new EhcacheStatisticsProvider(statisticsProviderConfiguration, executor);
 
-    ContextProvider contextProvider = new ContextProvider();
+    CapabilityContextProvider capabilityContextProvider = new CapabilityContextProvider();
 
-    return new DefaultManagementRegistry(ehcacheActionProvider, ehcacheManagerActionProvider, ehcacheStatisticsProvider, contextProvider);
+    return new DefaultManagementRegistry(ehcacheActionProvider, ehcacheManagerActionProvider, ehcacheStatisticsProvider, capabilityContextProvider);
   }
 
   @Override

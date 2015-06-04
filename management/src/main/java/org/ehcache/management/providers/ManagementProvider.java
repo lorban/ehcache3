@@ -15,9 +15,12 @@
  */
 package org.ehcache.management.providers;
 
-import org.terracotta.management.capabilities.context.Context;
+import org.terracotta.management.capabilities.context.CapabilityContext;
 import org.terracotta.management.capabilities.descriptors.Descriptor;
+import org.terracotta.management.stats.Statistic;
 
+import java.util.Collection;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -33,6 +36,8 @@ public interface ManagementProvider<T> {
 
   Set<Descriptor> descriptions();
 
-  Context context();
+  CapabilityContext capabilityContext();
+
+  Collection<Statistic<?>> collectStatistics(Map<String, String> context, String[] statisticNames);
 
 }

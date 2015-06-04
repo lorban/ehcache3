@@ -16,7 +16,7 @@
 package org.ehcache.management.providers;
 
 import org.ehcache.EhcacheManager;
-import org.terracotta.management.capabilities.context.Context;
+import org.terracotta.management.capabilities.context.CapabilityContext;
 
 import java.util.Collections;
 
@@ -42,7 +42,7 @@ public class EventProvider extends AbstractActionProvider<EhcacheManager, EventA
   }
 
   @Override
-  public Context context() {
-    return new Context(Collections.<Context.Attribute>emptySet());
+  public CapabilityContext capabilityContext() {
+    return new CapabilityContext(Collections.<CapabilityContext.Attribute>emptySet());
   }
 }

@@ -20,6 +20,7 @@ import org.ehcache.management.annotations.Named;
 import org.ehcache.util.ConcurrentWeakIdentityHashMap;
 import org.terracotta.management.capabilities.descriptors.CallDescriptor;
 import org.terracotta.management.capabilities.descriptors.Descriptor;
+import org.terracotta.management.stats.Statistic;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -27,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 
@@ -109,4 +111,8 @@ public abstract class AbstractActionProvider<T, A> implements ManagementProvider
     return capabilities;
   }
 
+  @Override
+  public final Collection<Statistic<?>> collectStatistics(Map<String, String> context, String[] statisticNames) {
+    throw new UnsupportedOperationException("Not a statistics provider");
+  }
 }
