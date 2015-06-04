@@ -120,7 +120,7 @@ public class EhcacheStatistics {
           SampledStatistic<Long> count = result.count();
           return new SampledCounter(statisticName, buildSamples(count));
         } else if ((name + "Rate").equals(statisticName)) {
-          SampledStatistic rate = result.rate(); //TODO: rate is a SampledStatistic<Long> - oh really?
+          SampledStatistic<Double> rate = result.rate();
           return new SampledRate(statisticName, buildSamples(rate), TimeUnit.SECONDS); //TODO: get the TimeUnit from config
         } else if ((name + "LatencyMinimum").equals(statisticName)) {
           SampledStatistic<Long> minimum = result.latency().minimum();
