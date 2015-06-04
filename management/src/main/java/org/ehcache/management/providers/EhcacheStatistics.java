@@ -204,7 +204,7 @@ public class EhcacheStatistics {
 
         capabilities.add(new StatisticDescriptorCategory(name, statistics));
       } else if ("Ratio".equals(type)) {
-        capabilities.add(new StatisticDescriptor(name + "Ratio", StatisticType.RATIO));
+        capabilities.add(new StatisticDescriptor(name + "Ratio", StatisticType.SAMPLED_RATIO));
       }
     }
 
