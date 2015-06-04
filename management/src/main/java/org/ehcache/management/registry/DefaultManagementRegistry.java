@@ -18,6 +18,7 @@ package org.ehcache.management.registry;
 import org.ehcache.management.ManagementRegistry;
 import org.ehcache.management.config.StatisticsProviderConfiguration;
 import org.ehcache.management.providers.EhcacheStatisticsProvider;
+import org.ehcache.management.providers.EventProvider;
 import org.ehcache.management.providers.ManagementProvider;
 import org.ehcache.spi.ServiceProvider;
 import org.ehcache.spi.service.ServiceConfiguration;
@@ -48,11 +49,18 @@ public class DefaultManagementRegistry implements ManagementRegistry {
 
   private final Map<Class<?>, List<ManagementProvider<?>>> managementProviders = new HashMap<Class<?>, List<ManagementProvider<?>>>();
   private final ReadWriteLock lock = new ReentrantReadWriteLock();
+  private final EventProvider eventProvider = new EventProvider();
 
   DefaultManagementRegistry(ManagementProvider<?>... managementProviders) {
     for (ManagementProvider<?> managementProvider : managementProviders) {
       addSupportFor(managementProvider);
     }
+    addSupportFor(eventProvider);
+  }
+
+  @Override
+  public void sendEvent(Object event) {
+    eventProvider.sendEvent(event);
   }
 
   void addSupportFor(ManagementProvider<?> managementProvider) {

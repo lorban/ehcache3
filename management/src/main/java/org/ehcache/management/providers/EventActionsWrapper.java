@@ -13,24 +13,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.ehcache.management;
+package org.ehcache.management.providers;
 
-import org.ehcache.spi.service.Service;
+import org.ehcache.management.annotations.Exposed;
+import org.ehcache.management.annotations.Named;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Map;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingDeque;
 
 /**
  * @author Ludovic Orban
  */
-public interface ManagementRegistry extends Service {
+public class EventActionsWrapper {
 
-  <T> void register(Class<T> managedType, T managedObject);
+  private final BlockingQueue<Object> events = new LinkedBlockingDeque<Object>();
 
-  <T> void unregister(Class<T> managedType, T managedObject);
+  @Exposed
+  public Collection<Object> consumeEvents(@Named("max") int max) {
+    Collection<Object> result = new ArrayList<Object>(max);
+    events.drainTo(result, max);
+    return result;
+  }
 
-  <T> Collection<T> capabilities();
-
-  void sendEvent(Object event);
-
+  public void queueEvent(Object event) {
+    events.add(event);
+  }
 }
