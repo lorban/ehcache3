@@ -322,15 +322,15 @@ public class EhcacheManager implements PersistentCacheManager {
     final Ehcache<K, V> ehCache = new Ehcache<K, V>(runtimeConfiguration, store, decorator, evtService,
         useLoaderInAtomics, LoggerFactory.getLogger(Ehcache.class + "-" + alias));
 
+    Map<String, Object> properties = new HashMap<String, Object>();
+    properties.put("Setting", "CacheName");
+    final EhcacheStatsSettings ehcacheStatsSettings = new EhcacheStatsSettings(alias, properties);
+
     lifeCycledList.add(new LifeCycled() {
       @Override
       public void init() throws Exception {
         StatisticsManager.associate(ehCache).withParent(EhcacheManager.this);
-
-        Map<String, Object> properties = new HashMap<String, Object>();
-        properties.put("Setting", "CacheName");
-
-        StatisticsManager.associate(new EhcacheStatsSettings(alias, properties)).withParent(ehCache);
+        StatisticsManager.associate(ehcacheStatsSettings).withParent(ehCache);
         if (managementRegistry != null) {
           managementRegistry.register(Ehcache.class, ehCache);
         }
