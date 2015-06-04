@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import org.terracotta.management.capabilities.ActionsCapability;
 import org.terracotta.management.capabilities.Capability;
 import org.terracotta.management.capabilities.StatisticsCapability;
+import org.terracotta.management.capabilities.context.Context;
 import org.terracotta.management.capabilities.descriptors.Descriptor;
 
 import java.util.ArrayList;
@@ -115,19 +116,21 @@ public class DefaultManagementRegistry implements ManagementRegistry {
           if (managementProvider instanceof EhcacheStatisticsProvider) {
             Set<Descriptor> descriptors = managementProvider.descriptions();
             String name = managementProvider.getClass().getName();
+            Context context = managementProvider.context();
             EhcacheStatisticsProvider ehcacheStatisticsProvider = (EhcacheStatisticsProvider) managementProvider;
             StatisticsProviderConfiguration configuration = ehcacheStatisticsProvider.getConfiguration();
             StatisticsCapability.Properties properties = new StatisticsCapability.Properties(configuration.averageWindowDuration(),
                 configuration.averageWindowUnit(), configuration.historySize(), configuration.historyInterval(),
                 configuration.historyIntervalUnit(), configuration.timeToDisable(), configuration.timeToDisableUnit());
 
-            StatisticsCapability statisticsCapability = new StatisticsCapability(name, properties, descriptors);
+            StatisticsCapability statisticsCapability = new StatisticsCapability(name, properties, descriptors, context);
             result.add(statisticsCapability);
           } else {
             Set<Descriptor> descriptors = managementProvider.descriptions();
             String name = managementProvider.getClass().getName();
+            Context context = managementProvider.context();
 
-            ActionsCapability actionsCapability = new ActionsCapability(name, descriptors);
+            ActionsCapability actionsCapability = new ActionsCapability(name, descriptors, context);
             result.add(actionsCapability);
           }
         }

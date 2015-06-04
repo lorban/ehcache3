@@ -18,8 +18,10 @@ package org.ehcache.management.providers;
 import org.ehcache.Ehcache;
 import org.ehcache.management.config.StatisticsProviderConfiguration;
 import org.ehcache.util.ConcurrentWeakIdentityHashMap;
+import org.terracotta.management.capabilities.context.Context;
 import org.terracotta.management.capabilities.descriptors.Descriptor;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
@@ -69,6 +71,11 @@ public class EhcacheStatisticsProvider implements ManagementProvider<Ehcache> {
       capabilities.addAll(ehcacheStatistics.capabilities());
     }
     return capabilities;
+  }
+
+  @Override
+  public Context context() {
+    return new Context(Arrays.asList(new Context.Attribute("cacheManagerName", true), new Context.Attribute("cacheName", false)));
   }
 
 }

@@ -19,12 +19,14 @@ import org.ehcache.Ehcache;
 import org.ehcache.management.annotations.Exposed;
 import org.ehcache.management.annotations.Named;
 import org.ehcache.util.ConcurrentWeakIdentityHashMap;
+import org.terracotta.management.capabilities.context.Context;
 import org.terracotta.management.capabilities.descriptors.CallDescriptor;
 import org.terracotta.management.capabilities.descriptors.Descriptor;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -56,6 +58,11 @@ public class EhcacheActionProvider implements ManagementProvider<Ehcache<?, ?>> 
   @Override
   public Set<Descriptor> descriptions() {
     return listManagementCapabilities();
+  }
+
+  @Override
+  public Context context() {
+    return new Context(Arrays.asList(new Context.Attribute("cacheManagerName", true), new Context.Attribute("cacheName", true)));
   }
 
   private Set<Descriptor> listManagementCapabilities() {

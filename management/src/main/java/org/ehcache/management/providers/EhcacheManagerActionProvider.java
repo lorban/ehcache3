@@ -16,8 +16,10 @@
 package org.ehcache.management.providers;
 
 import org.ehcache.EhcacheManager;
+import org.terracotta.management.capabilities.context.Context;
 import org.terracotta.management.capabilities.descriptors.Descriptor;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -42,6 +44,11 @@ public class EhcacheManagerActionProvider implements ManagementProvider<EhcacheM
   @Override
   public Set<Descriptor> descriptions() {
     return new HashSet<Descriptor>();
+  }
+
+  @Override
+  public Context context() {
+    return new Context(Collections.singletonList(new Context.Attribute("cacheManagerName", true)));
   }
 
 }
