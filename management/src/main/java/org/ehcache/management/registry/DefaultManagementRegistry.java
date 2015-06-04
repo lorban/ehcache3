@@ -17,6 +17,7 @@ package org.ehcache.management.registry;
 
 import org.ehcache.management.ManagementRegistry;
 import org.ehcache.management.config.StatisticsProviderConfiguration;
+import org.ehcache.management.providers.CapabilityContextProvider;
 import org.ehcache.management.providers.EhcacheStatisticsProvider;
 import org.ehcache.management.providers.EventProvider;
 import org.ehcache.management.providers.ManagementProvider;
@@ -24,18 +25,14 @@ import org.ehcache.spi.ServiceProvider;
 import org.ehcache.spi.service.ServiceConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.terracotta.management.TreeContext;
 import org.terracotta.management.capabilities.ActionsCapability;
 import org.terracotta.management.capabilities.Capability;
 import org.terracotta.management.capabilities.StatisticsCapability;
 import org.terracotta.management.capabilities.context.CapabilityContext;
 import org.terracotta.management.capabilities.descriptors.Descriptor;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -50,6 +47,8 @@ public class DefaultManagementRegistry implements ManagementRegistry {
   private final Map<Class<?>, List<ManagementProvider<?>>> managementProviders = new HashMap<Class<?>, List<ManagementProvider<?>>>();
   private final ReadWriteLock lock = new ReentrantReadWriteLock();
   private final EventProvider eventProvider = new EventProvider();
+  private final CapabilityContextProvider capabilityContextProvider = new CapabilityContextProvider();
+
 
   DefaultManagementRegistry(ManagementProvider<?>... managementProviders) {
     for (ManagementProvider<?> managementProvider : managementProviders) {
@@ -61,6 +60,16 @@ public class DefaultManagementRegistry implements ManagementRegistry {
   @Override
   public void sendEvent(Object event) {
     eventProvider.sendEvent(event);
+  }
+
+  @Override
+  public <T> T getContext() {
+    Map<String, TreeContext> subTreeContexts =  new HashMap();
+    TreeContext treeContext =  new TreeContext(subTreeContexts, Collections.EMPTY_LIST);
+    for (String cacheManagerName : capabilityContextProvider.getCacheManagerNames()) {
+      subTreeContexts.put(cacheManagerName, new TreeContext(Collections.EMPTY_MAP, capabilityContextProvider.getCacheNames(cacheManagerName)));
+    }
+    return (T) treeContext;
   }
 
   @Override

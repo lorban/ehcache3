@@ -37,7 +37,7 @@ import java.util.concurrent.ConcurrentMap;
  */
 public abstract class AbstractActionProvider<T, A> implements ManagementProvider<T> {
 
-  private final ConcurrentMap<T, A> actions = new ConcurrentWeakIdentityHashMap<T, A>();
+  protected final ConcurrentMap<T, A> actions = new ConcurrentWeakIdentityHashMap<T, A>();
 
   @Override
   public final void register(T contextObject) {

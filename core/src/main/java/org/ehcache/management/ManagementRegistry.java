@@ -33,5 +33,7 @@ public interface ManagementRegistry extends Service {
 
   void sendEvent(Object event);
 
+  <T > T getContext();
+
   <T> Collection<T> collectStatistics(Map<String, String> context, String capabilityName, String... statisticNames);
 }

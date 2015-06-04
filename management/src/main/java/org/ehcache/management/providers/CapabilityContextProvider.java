@@ -18,7 +18,10 @@ package org.ehcache.management.providers;
 import org.ehcache.EhcacheManager;
 import org.terracotta.management.capabilities.context.CapabilityContext;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Map;
 
 /**
  * @author Ludovic Orban
@@ -38,6 +41,22 @@ public class CapabilityContextProvider extends AbstractActionProvider<EhcacheMan
   @Override
   public CapabilityContext capabilityContext() {
     return new CapabilityContext(Collections.<CapabilityContext.Attribute>emptySet());
+  }
+
+  public Collection<String> getCacheManagerNames() {
+    Collection<String> allCacheManagerNames = new ArrayList();
+    for (Map.Entry<EhcacheManager, EhcacheManagerContext> ehcacheManagerEhcacheManagerContextEntry : actions.entrySet()) {
+      allCacheManagerNames.addAll(ehcacheManagerEhcacheManagerContextEntry.getValue().cacheManagerNames());
+    }
+    return allCacheManagerNames;
+  }
+
+  public Collection<String> getCacheNames(String cacheManagerName) {
+    Collection<String> allCacheNames = new ArrayList();
+    for (Map.Entry<EhcacheManager, EhcacheManagerContext> ehcacheManagerEhcacheManagerContextEntry : actions.entrySet()) {
+      allCacheNames.addAll(ehcacheManagerEhcacheManagerContextEntry.getValue().cacheNames(cacheManagerName));
+    }
+    return allCacheNames;
   }
 
 }
