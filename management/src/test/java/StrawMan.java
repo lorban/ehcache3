@@ -22,8 +22,8 @@ import org.ehcache.config.CacheConfigurationBuilder;
 import org.ehcache.config.ResourcePoolsBuilder;
 import org.ehcache.config.units.EntryUnit;
 import org.ehcache.management.ManagementRegistry;
-import org.ehcache.management.registry.DefaultManagementRegistryFactoryConfiguration;
 import org.ehcache.management.config.EhcacheStatisticsProviderConfiguration;
+import org.ehcache.management.registry.DefaultManagementRegistryFactoryConfiguration;
 import org.ehcache.spi.ServiceProvider;
 import org.ehcache.spi.service.Service;
 import org.ehcache.spi.service.ServiceConfiguration;
@@ -31,7 +31,6 @@ import org.junit.Test;
 import org.terracotta.management.capabilities.Capability;
 
 import java.util.Collection;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -58,6 +57,8 @@ public class StrawMan {
             .buildConfig(Long.class, String.class));
 
     Collection<Capability> capabilities = capabilitiesCollectorService.listManagementCapabilities();
+
+    // ((DefaultManagementRegistry) capabilitiesCollectorService.managementRegistry).managementProviders.get(EhcacheManager.class).get(1).actions.get(cacheManager).cacheNames(null)
 
     cacheManager.close();
   }
