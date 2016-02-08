@@ -19,12 +19,14 @@ package org.ehcache.util;
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
 import java.util.AbstractMap;
+import java.util.AbstractSet;
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * @author Alex Snaps
@@ -117,15 +119,56 @@ public class ConcurrentWeakIdentityHashMap<K, V> implements ConcurrentMap<K, V> 
 
   @Override
   public Set<K> keySet() {
-    purgeKeys();
-    final HashSet<K> ks = new HashSet<K>();
-    for (WeakReference<K> kWeakReference : map.keySet()) {
-      final K k = kWeakReference.get();
-      if (k != null) {
-        ks.add(k);
+    return new AbstractSet<K>() {
+      @Override
+      public Iterator<K> iterator() {
+        purgeKeys();
+        final Iterator<WeakReference<K>> iterator = map.keySet().iterator();
+        final AtomicReference<K> ref = new AtomicReference<K>();
+        advance(iterator, ref);
+
+        return new Iterator<K>() {
+          @Override
+          public boolean hasNext() {
+            return ref.get() != null;
+          }
+
+          @Override
+          public K next() {
+            K k = ref.get();
+            advance(iterator, ref);
+            return k;
+          }
+
+          @Override
+          public void remove() {
+            ConcurrentWeakIdentityHashMap.this.remove(ref.get());
+            advance(iterator, ref);
+          }
+        };
       }
-    }
-    return ks;
+
+      private void advance(Iterator<WeakReference<K>> iterator, AtomicReference<K> ref) {
+        while (iterator.hasNext()) {
+          K next = iterator.next().get();
+          if (next != null) {
+            ref.set(next);
+            return;
+          }
+        }
+        ref.set(null);
+      }
+
+      @Override
+      public boolean contains(Object o) {
+        return ConcurrentWeakIdentityHashMap.this.containsKey(o);
+      }
+
+      @Override
+      public int size() {
+        return map.size();
+      }
+    };
   }
 
   @Override
@@ -136,15 +179,52 @@ public class ConcurrentWeakIdentityHashMap<K, V> implements ConcurrentMap<K, V> 
 
   @Override
   public Set<Entry<K, V>> entrySet() {
-    purgeKeys();
-    final HashSet<Entry<K, V>> entries = new HashSet<Entry<K, V>>();
-    for (Entry<WeakReference<K>, V> entry : map.entrySet()) {
-      final K k = entry.getKey().get();
-      if(k != null) {
-        entries.add(new AbstractMap.SimpleEntry<K, V>(k, entry.getValue()));
+    return new AbstractSet<Entry<K, V>>() {
+      @Override
+      public Iterator<Entry<K, V>> iterator() {
+        purgeKeys();
+        final Iterator<Entry<WeakReference<K>, V>> iterator = map.entrySet().iterator();
+        final AtomicReference<Entry<K, V>> ref = new AtomicReference<Entry<K, V>>();
+        advance(iterator, ref);
+
+        return new Iterator<Entry<K, V>>() {
+          @Override
+          public boolean hasNext() {
+            return ref.get() != null;
+          }
+
+          @Override
+          public Entry<K, V> next() {
+            Entry<K, V> entry = ref.get();
+            advance(iterator, ref);
+            return entry;
+          }
+
+          @Override
+          public void remove() {
+            ConcurrentWeakIdentityHashMap.this.remove(ref.get().getKey());
+            advance(iterator, ref);
+          }
+        };
       }
-    }
-    return entries;
+
+      private void advance(Iterator<Entry<WeakReference<K>, V>> iterator, AtomicReference<Entry<K, V>> ref) {
+        while (iterator.hasNext()) {
+          Entry<WeakReference<K>, V> next = iterator.next();
+          K key = next.getKey().get();
+          if (key != null) {
+            ref.set(new AbstractMap.SimpleEntry<K, V>(key, next.getValue()));
+            return;
+          }
+        }
+        ref.set(null);
+      }
+
+      @Override
+      public int size() {
+        return map.size();
+      }
+    };
   }
 
   private void purgeKeys() {
