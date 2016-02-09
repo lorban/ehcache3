@@ -18,7 +18,7 @@ package org.ehcache.util;
 
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
-import java.util.AbstractMap;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.AbstractSet;
 import java.util.Collection;
 import java.util.Iterator;
@@ -26,7 +26,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * @author Alex Snaps
@@ -123,40 +122,12 @@ public class ConcurrentWeakIdentityHashMap<K, V> implements ConcurrentMap<K, V> 
       @Override
       public Iterator<K> iterator() {
         purgeKeys();
-        final Iterator<WeakReference<K>> iterator = map.keySet().iterator();
-        final AtomicReference<K> ref = new AtomicReference<K>();
-        advance(iterator, ref);
-
-        return new Iterator<K>() {
+        return new WeakSafeIterator<K, WeakReference<K>>(map.keySet().iterator()) {
           @Override
-          public boolean hasNext() {
-            return ref.get() != null;
-          }
-
-          @Override
-          public K next() {
-            K k = ref.get();
-            advance(iterator, ref);
-            return k;
-          }
-
-          @Override
-          public void remove() {
-            ConcurrentWeakIdentityHashMap.this.remove(ref.get());
-            advance(iterator, ref);
+          protected K extract(WeakReference<K> u) {
+            return u.get();
           }
         };
-      }
-
-      private void advance(Iterator<WeakReference<K>> iterator, AtomicReference<K> ref) {
-        while (iterator.hasNext()) {
-          K next = iterator.next().get();
-          if (next != null) {
-            ref.set(next);
-            return;
-          }
-        }
-        ref.set(null);
       }
 
       @Override
@@ -183,41 +154,17 @@ public class ConcurrentWeakIdentityHashMap<K, V> implements ConcurrentMap<K, V> 
       @Override
       public Iterator<Entry<K, V>> iterator() {
         purgeKeys();
-        final Iterator<Entry<WeakReference<K>, V>> iterator = map.entrySet().iterator();
-        final AtomicReference<Entry<K, V>> ref = new AtomicReference<Entry<K, V>>();
-        advance(iterator, ref);
-
-        return new Iterator<Entry<K, V>>() {
+        return new WeakSafeIterator<Entry<K, V>, Entry<WeakReference<K>, V>>(map.entrySet().iterator()) {
           @Override
-          public boolean hasNext() {
-            return ref.get() != null;
-          }
-
-          @Override
-          public Entry<K, V> next() {
-            Entry<K, V> entry = ref.get();
-            advance(iterator, ref);
-            return entry;
-          }
-
-          @Override
-          public void remove() {
-            ConcurrentWeakIdentityHashMap.this.remove(ref.get().getKey());
-            advance(iterator, ref);
+          protected Entry<K, V> extract(Entry<WeakReference<K>, V> u) {
+            K key = u.getKey().get();
+            if (key == null) {
+              return null;
+            } else {
+              return new SimpleEntry<K, V>(key, u.getValue());
+            }
           }
         };
-      }
-
-      private void advance(Iterator<Entry<WeakReference<K>, V>> iterator, AtomicReference<Entry<K, V>> ref) {
-        while (iterator.hasNext()) {
-          Entry<WeakReference<K>, V> next = iterator.next();
-          K key = next.getKey().get();
-          if (key != null) {
-            ref.set(new AbstractMap.SimpleEntry<K, V>(key, next.getValue()));
-            return;
-          }
-        }
-        ref.set(null);
       }
 
       @Override
@@ -256,5 +203,46 @@ public class ConcurrentWeakIdentityHashMap<K, V> implements ConcurrentMap<K, V> 
     public int hashCode() {
       return hashCode;
     }
+  }
+  
+  private static abstract class WeakSafeIterator<T, U> implements Iterator<T> {
+
+    private final Iterator<U> weakIterator;
+    protected T strongNext;
+
+    public WeakSafeIterator(Iterator<U> weakIterator) {
+      this.weakIterator = weakIterator;
+      advance();
+    }
+
+    private void advance() {
+      while (weakIterator.hasNext()) {
+        U nextU = weakIterator.next();
+        if ((strongNext = extract(nextU)) != null) {
+          return;
+        }
+      }
+      strongNext = null;
+    }
+    
+    @Override
+    public final boolean hasNext() {
+      return strongNext != null;
+    }
+
+    @Override
+    public final T next() {
+      T next = strongNext;
+      advance();
+      return next;
+    }
+
+    @Override
+    public void remove() {
+      throw new UnsupportedOperationException();
+    }
+
+    
+    protected abstract T extract(U u);
   }
 }

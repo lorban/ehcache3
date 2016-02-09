@@ -180,31 +180,6 @@ public class ConcurrentWeakIdentityHashMapTest {
   }
 
   @Test
-  public void testKeySetIteratorRemoveReflectedInMap() {
-    ConcurrentWeakIdentityHashMap<String, String> map = new ConcurrentWeakIdentityHashMap<String, String>();
-    Set<String> keys = map.keySet();
-
-    String key1 = "key1";
-    String key2 = "key2";
-    String key3 = "key3";
-    map.put(key1, "value1");
-    map.put(key2, "value2");
-    map.put(key3, "value3");
-
-    Iterator<String> iterator = keys.iterator();
-    assertThat(iterator.hasNext(), is(true));
-    iterator.remove();
-    assertThat(iterator.hasNext(), is(true));
-    iterator.remove();
-    assertThat(iterator.hasNext(), is(true));
-    iterator.remove();
-    assertThat(iterator.hasNext(), is(false));
-
-    assertThat(keys.size(), is(0));
-    assertThat(map.size(), is(0));
-  }
-
-  @Test
   public void testEntrySetSize() throws Exception {
     ConcurrentWeakIdentityHashMap<String, String> map = new ConcurrentWeakIdentityHashMap<String, String>();
     Set<Map.Entry<String, String>> entries = map.entrySet();
@@ -257,30 +232,4 @@ public class ConcurrentWeakIdentityHashMapTest {
     assertThat(iterator.next().getKey(), startsWith("key"));
     assertThat(iterator.hasNext(), is(false));
   }
-
-  @Test
-  public void testEntrySetIteratorRemoveReflectedInMap() {
-    ConcurrentWeakIdentityHashMap<String, String> map = new ConcurrentWeakIdentityHashMap<String, String>();
-    Set<Map.Entry<String, String>> entries = map.entrySet();
-
-    String key1 = "key1";
-    String key2 = "key2";
-    String key3 = "key3";
-    map.put(key1, "value1");
-    map.put(key2, "value2");
-    map.put(key3, "value3");
-
-    Iterator<Map.Entry<String, String>> iterator = entries.iterator();
-    assertThat(iterator.hasNext(), is(true));
-    iterator.remove();
-    assertThat(iterator.hasNext(), is(true));
-    iterator.remove();
-    assertThat(iterator.hasNext(), is(true));
-    iterator.remove();
-    assertThat(iterator.hasNext(), is(false));
-
-    assertThat(entries.size(), is(0));
-    assertThat(map.size(), is(0));
-  }
-
 }
